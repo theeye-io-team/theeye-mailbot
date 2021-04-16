@@ -1,0 +1,28 @@
+{
+  "name": "theeye-mailbot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/theeye-io/theeye-mailbot.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/theeye-io/theeye-mailbot/issues"
+  },
+  "homepage": "https://github.com/theeye-io/theeye-mailbot#readme",
+  "dependencies": {
+    "form-data": "~3.0.0",
+    "got": "^11.8.1",
+    "imap-simple": "~5.0.0",
+    "luxon": "~1.26.0",
+    "mailparser": "~3.1.0",
+    "qs": "~6.9.6",
+    "rfc2047": "^3.0.1"
+  }
+}

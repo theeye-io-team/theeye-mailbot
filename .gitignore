@@ -1,0 +1,11 @@
+node_modules
+*.swp
+*.swo
+attachments
+
+config
+config.js
+config.json
+cache
+
+mailbot
