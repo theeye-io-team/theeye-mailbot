@@ -102,6 +102,11 @@ const getFormattedThresholdDate = (time, tz = 'America/Argentina/Buenos_Aires') 
   const hours = time.substring(0, 2)
   const minutes = time.substring(3, 5)
 
+  // Agregar al config  { ..., "startOfDay" : "14:00", ... }
+  if(time < config.startOfDay) {
+    date = date.plus({days:1})
+  }
+
   return date.set({ hours, minutes, seconds: 0 })
 }
 
