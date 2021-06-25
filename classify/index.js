@@ -5,7 +5,6 @@ const MailBot = require('../lib/mailbot')
 const Cache = require('../lib/cache')
 const TheEyeIndicator = require('../lib/indicator')
 const config = require('../lib/config').decrypt()
-
 const filters = require(process.env.CLASSIFICATION_RULEZ_PATH)
 
 const main = module.exports = async () => {
@@ -113,6 +112,11 @@ const getFormattedThresholdDate = (time, tz = 'America/Argentina/Buenos_Aires') 
   const date = DateTime.now().setZone(tz)
   const hours = time.substring(0, 2)
   const minutes = time.substring(3, 5)
+
+  // Agregar al config  { ..., "startOfDay" : "14:00", ... }
+  if(time < config.startOfDay) {
+    date = date.plus({days:1})
+  }
 
   return date.set({ hours, minutes, seconds: 0 })
 }
