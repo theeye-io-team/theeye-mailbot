@@ -6,15 +6,16 @@ const Cache = require('../lib/cache')
 const TheEyeIndicator = require('../lib/indicator')
 const config = require('../lib/config').decrypt()
 const filters = require(process.env.CLASSIFICATION_RULEZ_PATH)
+const tz = 'America/Argentina/Buenos_Aires'
 
 const main = module.exports = async () => {
 
-  const classificationCache = new ClassificationCache({ cacheId: 'classification' })
   const mailBot = new MailBot(config)
   await mailBot.connect()
 
   for (const filter of filters) {
 
+    const classificationCache = new ClassificationCache({ cacheId: 'classification' })
     const filterHash = classificationCache.createHash(JSON.stringify(filter))
     if (classificationCache.alreadyProcessed(filterHash) === true) {
       console.log('rule check time ended.')
@@ -32,11 +33,11 @@ const main = module.exports = async () => {
     //const lowTime = filter.thresholdTimes.low
     //const highTime = filter.thresholdTimes.high
 
-    const minFilterDate = getFormattedThresholdDate(filter.thresholdTimes.start)
-    const maxFilterDate = getFormattedThresholdDate(filter.thresholdTimes.success)
-    const criticalFilterDate = getFormattedThresholdDate(filter.thresholdTimes.critical)
+    const minFilterDate = getFormattedThresholdDate(filter.thresholdTimes.start,tz, classificationCache.data['runtimeDate'])
+    const maxFilterDate = getFormattedThresholdDate(filter.thresholdTimes.success,tz, classificationCache.data['runtimeDate'])
+    const criticalFilterDate = getFormattedThresholdDate(filter.thresholdTimes.critical,tz, classificationCache.data['runtimeDate'])
 
-    const currentDate = DateTime.now().setZone('America/Argentina/Buenos_Aires')
+    const currentDate = DateTime.now().setZone(tz)
     const messages = await mailBot.searchMessages(searchCriteria)
 
     const indicator = new TheEyeIndicator(filter.indicatorTitle || filter.subject)
@@ -56,14 +57,14 @@ const main = module.exports = async () => {
 
         if (mailDate < maxFilterDate) {
           indicator.state = 'normal'
-          indicator.setValue(currentDate, indicatorDescription, 'Arrived on time')
+          indicator.setValue(mailDate, indicatorDescription, 'Arrived on time')
           await indicator.put()
           await mailBot.moveMessage(message)
           classificationCache.setProcessed(filterHash)
         //} else if (maxFilterDate <= mailDate) {
         } else {
           indicator.state = 'critical'
-          indicator.setValue(currentDate, indicatorDescription, 'Arrived late')
+          indicator.setValue(mailDate, indicatorDescription, 'Arrived late')
           await indicator.put()
           await mailBot.moveMessage(message)
           classificationCache.setProcessed(filterHash)
@@ -102,14 +103,14 @@ const main = module.exports = async () => {
 const adjustTimezone = (mailDate) => {
   const date = DateTime
     .fromISO(mailDate.toISOString())
-    .setZone('America/Argentina/Buenos_Aires')
+    .setZone(tz)
   return date 
 }
 
-const getFormattedThresholdDate = (time, tz = 'America/Argentina/Buenos_Aires') => {
+const getFormattedThresholdDate = (time, tz, date) => {
   if (!time) return null
 
-  const date = DateTime.now().setZone(tz)
+  const date = DateTime.fromISO(date.toISOString()).setZone(tz)
   const hours = time.substring(0, 2)
   const minutes = time.substring(3, 5)
 
@@ -126,6 +127,7 @@ class ClassificationCache extends Cache {
     super(options)
     // load cached data
     this.data = this.get()
+    this.setTodayDate()
   }
 
   alreadyProcessed (hash) {
@@ -143,6 +145,14 @@ class ClassificationCache extends Cache {
     const hash = crypto.createHash('sha1')
     hash.update(string)
     return hash.digest('hex')
+  }
+
+  setTodayDate () {
+    if(!this.data['runtimeDate']) {
+      this.data['runtimeDate'] = new Date()
+      this.save(this.data)
+    }
+    return this
   }
 }
 
