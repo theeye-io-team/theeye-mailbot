@@ -99,7 +99,7 @@ const adjustTimezone = (mailDate) => {
 const getFormattedThresholdDate = (time, tz, startingDate) => {
   if (!time) return null
 
-  const date = DateTime.fromISO(startingDate.toISOString()).setZone(tz)
+  let date = DateTime.fromISO(startingDate.toISOString()).setZone(tz)
   const hours = time.substring(0, 2)
   const minutes = time.substring(3, 5)
 
