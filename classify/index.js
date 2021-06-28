@@ -2,7 +2,7 @@ const { DateTime } = require('luxon')
 const crypto = require('crypto')
 
 const MailBot = require('../lib/mailbot')
-const Cache = require('../lib/cache')
+const ClassificationCache = require('./cache')
 const TheEyeIndicator = require('../lib/indicator')
 const config = require('../lib/config').decrypt()
 const filters = require(process.env.CLASSIFICATION_RULEZ_PATH)
@@ -10,12 +10,12 @@ const tz = 'America/Argentina/Buenos_Aires'
 
 const main = module.exports = async () => {
 
+  const classificationCache = new ClassificationCache({ cacheId: 'classification' })
   const mailBot = new MailBot(config)
   await mailBot.connect()
 
   for (const filter of filters) {
 
-    const classificationCache = new ClassificationCache({ cacheId: 'classification' })
     const filterHash = classificationCache.createHash(JSON.stringify(filter))
     if (classificationCache.alreadyProcessed(filterHash) === true) {
       console.log('rule check time ended.')
@@ -47,13 +47,6 @@ const main = module.exports = async () => {
     if (messages.length > 0) {
       for (const message of messages) {
         const mailDate = adjustTimezone(mailBot.getDate(message))
-
-        //if (minFilterDate > mailDate || (minFilterDate <= mailDate && mailDate < maxFilterDate) ) {
-        //  indicator.state = 'normal'
-        //  await indicator.put()
-        //  await mailBot.moveMessage(message)
-        //  classificationCache.setProcessed(filterHash)
-        //}
 
         if (mailDate < maxFilterDate) {
           indicator.state = 'normal'
@@ -93,7 +86,6 @@ const main = module.exports = async () => {
       indicator.setValue(currentDate, indicatorDescription, message)
       indicator.state = state
       await indicator.put()
-      classificationCache.setProcessed(filterHash)
     }
   }
 
@@ -107,53 +99,19 @@ const adjustTimezone = (mailDate) => {
   return date 
 }
 
-const getFormattedThresholdDate = (time, tz, date) => {
+const getFormattedThresholdDate = (time, tz, startingDate) => {
   if (!time) return null
 
-  const date = DateTime.fromISO(date.toISOString()).setZone(tz)
+  const date = DateTime.fromISO(startingDate.toISOString()).setZone(tz)
   const hours = time.substring(0, 2)
   const minutes = time.substring(3, 5)
 
   // Agregar al config  { ..., "startOfDay" : "14:00", ... }
-  if(time < config.startOfDay) {
+  if (time < config.startOfDay) {
     date = date.plus({days:1})
   }
 
   return date.set({ hours, minutes, seconds: 0 })
-}
-
-class ClassificationCache extends Cache {
-  constructor (options) {
-    super(options)
-    // load cached data
-    this.data = this.get()
-    this.setTodayDate()
-  }
-
-  alreadyProcessed (hash) {
-    return this.data[hash] === true
-  }
-
-  setProcessed (hash) {
-    console.log(`flagging processed hash ${hash}`)
-    this.data[hash] = true
-    this.save(this.data)
-    return this
-  }
-
-  createHash (string) {
-    const hash = crypto.createHash('sha1')
-    hash.update(string)
-    return hash.digest('hex')
-  }
-
-  setTodayDate () {
-    if(!this.data['runtimeDate']) {
-      this.data['runtimeDate'] = new Date()
-      this.save(this.data)
-    }
-    return this
-  }
 }
 
 if (require.main === module) {

@@ -2,12 +2,11 @@ const { DateTime } = require('luxon')
 const crypto = require('crypto')
 
 const MailBot = require('../lib/mailbot-folder')
-const Cache = require('../lib/cache')
+const ClassificationCache = require('./cache')
 const TheEyeIndicator = require('../lib/indicator')
 const config = require('../lib/config').decrypt()
-const tz = 'America/Argentina/Buenos_Aires'
-
 const filters = require(process.env.CLASSIFICATION_RULEZ_PATH)
+const tz = 'America/Argentina/Buenos_Aires'
 
 const main = module.exports = async () => {
 
@@ -60,6 +59,7 @@ const main = module.exports = async () => {
           indicator.setValue(mailDate, indicatorDescription, 'Arrived late')
           await indicator.put()
           await mailBot.moveMessage(message)
+          classificationCache.setProcessed(filterHash)
         }
       }
     } else {
@@ -96,10 +96,10 @@ const adjustTimezone = (mailDate) => {
   return date 
 }
 
-const getFormattedThresholdDate = (time, tz, date) => {
+const getFormattedThresholdDate = (time, tz, startingDate) => {
   if (!time) return null
 
-  const date = DateTime.fromISO(date.toISOString()).setZone(tz)
+  const date = DateTime.fromISO(startingDate.toISOString()).setZone(tz)
   const hours = time.substring(0, 2)
   const minutes = time.substring(3, 5)
 
@@ -109,40 +109,6 @@ const getFormattedThresholdDate = (time, tz, date) => {
   }
 
   return date.set({ hours, minutes, seconds: 0 })
-}
-
-class ClassificationCache extends Cache {
-  constructor (options) {
-    super(options)
-    // load cached data
-    this.data = this.get()
-    this.setTodayDate()
-  }
-
-  alreadyProcessed (hash) {
-    return this.data[hash] === true
-  }
-
-  setProcessed (hash) {
-    console.log(`flagging processed hash ${hash}`)
-    this.data[hash] = true
-    this.save(this.data)
-    return this
-  }
-
-  createHash (string) {
-    const hash = crypto.createHash('sha1')
-    hash.update(string)
-    return hash.digest('hex')
-  }
-
-  setTodayDate () {
-    if(!this.data['runtimeDate']) {
-      this.data['runtimeDate'] = new Date()
-      this.save(this.data)
-    }
-    return this
-  }
 }
 
 if (require.main === module) {
