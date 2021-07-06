@@ -1,11 +1,12 @@
 const Cache = require('../lib/cache')
+const crypto = require('crypto')
 
 class ClassificationCache extends Cache {
   constructor (options) {
     super(options)
     // load cached data
     this.data = this.get()
-    this.setTodayDate()
+    this.setRuntimeDate()
   }
 
   alreadyProcessed (hash) {
@@ -25,7 +26,7 @@ class ClassificationCache extends Cache {
     return hash.digest('hex')
   }
 
-  setTodayDate () {
+  setRuntimeDate () {
     if(!this.data['runtimeDate']) {
       this.data['runtimeDate'] = new Date()
       this.save(this.data)

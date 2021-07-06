@@ -1,5 +1,4 @@
 const { DateTime } = require('luxon')
-const crypto = require('crypto')
 
 const MailBot = require('../lib/mailbot-folder')
 const ClassificationCache = require('./cache')
@@ -29,12 +28,12 @@ const main = module.exports = async () => {
       ['SUBJECT', `${filter.subject}`]
     ]
 
-    //const lowTime = filter.thresholdTimes.low
-    //const highTime = filter.thresholdTimes.high
+    const runtimeDate = new Date(classificationCache.data.runtimeDate)
+    const times = filter.thresholdTimes
 
-    const minFilterDate = getFormattedThresholdDate(filter.thresholdTimes.start,tz, classificationCache.data['runtimeDate'])
-    const maxFilterDate = getFormattedThresholdDate(filter.thresholdTimes.success,tz, classificationCache.data['runtimeDate'])
-    const criticalFilterDate = getFormattedThresholdDate(filter.thresholdTimes.critical,tz, classificationCache.data['runtimeDate'])
+    //const minFilterDate = getFormattedThresholdDate(times.start, tz, runtimeDate)
+    const maxFilterDate = getFormattedThresholdDate(times.success, tz, runtimeDate)
+    const criticalFilterDate = getFormattedThresholdDate(times.critical, tz, runtimeDate)
 
     const currentDate = DateTime.now().setZone(tz)
     const messages = await mailBot.searchMessages(searchCriteria)
@@ -96,16 +95,21 @@ const adjustTimezone = (mailDate) => {
   return date 
 }
 
+/**
+ * @param {String} time format 'HH:mm'
+ * @param {String} tz timezone string
+ * @param {Date} startingDate
+ */
 const getFormattedThresholdDate = (time, tz, startingDate) => {
-  if (!time) return null
+  if (!time) { return null }
 
-  let date = DateTime.fromISO(startingDate.toISOString()).setZone(tz)
+  let date = DateTime.fromISO( startingDate.toISOString() ).setZone(tz)
   const hours = time.substring(0, 2)
   const minutes = time.substring(3, 5)
 
   // Agregar al config  { ..., "startOfDay" : "14:00", ... }
-  if(time < config.startOfDay) {
-    date = date.plus({days:1})
+  if (time < config.startOfDay) {
+    date = date.plus({ days: 1 })
   }
 
   return date.set({ hours, minutes, seconds: 0 })

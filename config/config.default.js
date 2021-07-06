@@ -1,6 +1,7 @@
 const path = require('path')
 
 module.exports = {
+  "startOfDay": "00:00",
   "imap": {
     "user": "",
     "password": "",
