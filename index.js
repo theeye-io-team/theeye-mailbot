@@ -102,8 +102,6 @@ const main = module.exports = async () => {
       }
     }
 
-
-
     movedMessages++
   }
 
