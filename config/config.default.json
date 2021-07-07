@@ -1,6 +1,5 @@
-const path = require('path')
-
-module.exports = {
+{
+  "timezone":"America/Argentina/Buenos_Aires",
   "startOfDay": "00:00",
   "imap": {
     "user": "",
@@ -8,13 +7,18 @@ module.exports = {
     "host": "",
     "port": 993,
     "tls": true,
-    "authTimeout": 6000
+    "authTimeout": 6000,
+    "debug": false
   },
   "folders": {
-    "INBOX": "AP",
-    "processed": "AP_adjuntosDescargados",
-    "notProcessed": "AP_adjuntosNoProcesados"
-  },    
+    "local": "/opt/theeye/mailbot",
+    "INBOX": "Inbox",
+    "searchDirs": [
+      "Inbox/cur",
+      "Inbox/new"
+    ],
+    "processed": "Bot_Procesados"
+  },
   "attachments": {
     "allowed": {
       "dispositions": ["inline", "attachment"],
