@@ -5,7 +5,6 @@ const ClassificationCache = require('./cache')
 const TheEyeIndicator = require('../lib/indicator')
 const config = require('../lib/config').decrypt()
 const filters = require(process.env.CLASSIFICATION_RULEZ_PATH)
-const tz = 'America/Argentina/Buenos_Aires'
 
 const main = module.exports = async () => {
 
@@ -28,6 +27,8 @@ const main = module.exports = async () => {
       ['SUBJECT', `${filter.subject}`]
     ]
 
+    const currentDate = DateTime.now().setZone(tz)
+    const tz = config.timezone
     const runtimeDate = new Date(classificationCache.data.runtimeDate)
     const times = filter.thresholdTimes
 
@@ -35,7 +36,6 @@ const main = module.exports = async () => {
     const maxFilterDate = getFormattedThresholdDate(times.success, tz, runtimeDate)
     const criticalFilterDate = getFormattedThresholdDate(times.critical, tz, runtimeDate)
 
-    const currentDate = DateTime.now().setZone(tz)
     const messages = await mailBot.searchMessages(searchCriteria)
 
     const indicator = new TheEyeIndicator(filter.indicatorTitle || filter.subject)
@@ -44,7 +44,7 @@ const main = module.exports = async () => {
 
     if (messages.length > 0) {
       for (const message of messages) {
-        const mailDate = adjustTimezone(mailBot.getDate(message))
+        const mailDate = adjustTimezone(mailBot.getDate(message), tz)
 
         if (mailDate < maxFilterDate) {
           indicator.state = 'normal'
@@ -88,22 +88,23 @@ const main = module.exports = async () => {
   }
 }
 
-const adjustTimezone = (mailDate) => {
-  const date = DateTime
-    .fromISO(mailDate.toISOString())
-    .setZone(tz)
-  return date 
+/**
+ * @param {Date} date
+ * @param {String} timezone string
+ */
+const adjustTimezone = (date, timezone) => {
+  return DateTime.fromISO(date.toISOString()).setZone(timezone)
 }
 
 /**
  * @param {String} time format 'HH:mm'
- * @param {String} tz timezone string
+ * @param {String} timezone string
  * @param {Date} startingDate
  */
-const getFormattedThresholdDate = (time, tz, startingDate) => {
+const getFormattedThresholdDate = (time, timezone, startingDate) => {
   if (!time) { return null }
 
-  let date = DateTime.fromISO( startingDate.toISOString() ).setZone(tz)
+  let date = DateTime.fromISO( startingDate.toISOString() ).setZone(timezone)
   const hours = time.substring(0, 2)
   const minutes = time.substring(3, 5)
 
