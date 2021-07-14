@@ -3,9 +3,10 @@ node_modules
 *.swo
 attachments
 
-config
-config.js
-config.json
+config/mbsync.conf
+config/config.json
+config/*.json
+config/*.conf
 cache
 
 mailbot
