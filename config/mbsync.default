@@ -1,0 +1,37 @@
+IMAPAccount gmail
+# Office365
+Host outlook.office365.com
+User patricia-theeye@outlook.com
+Pass Perroverde911.
+# GMail
+#Host imap.gmail.com
+#Timeout 120
+#Port 993
+#User blyatzkrieg@gmail.com
+#Pass Assylum8934689995
+AuthMechs LOGIN
+SSLType IMAPS
+#SSLVersions TLSv1.3
+#CertificateFile /opt/theeye/imap.cer
+
+IMAPStore gmail-remote
+Account gmail
+
+MaildirStore gmail-local
+#Subfolders Verbatim
+# The trailing "/" is important
+Path /opt/theeye/mailbot/
+Inbox /opt/theeye/mailbot/Inbox
+
+Channel gmail
+Master :gmail-remote:
+Slave :gmail-local:
+# Exclude everything under the internal [Gmail] folder, except the interesting folders
+#Patterns * ![Gmail]* "[Gmail]/Procesados" "[Gmail]/Procesar"
+Patterns "INBOX" "HSBC" "HSBC_Procesados"
+# Automatically create missing mailboxes, both locally and on the server
+Create Both
+# Save the synchronization state files in the relevant directory
+SyncState *
+Sync All
+Expunge Both
