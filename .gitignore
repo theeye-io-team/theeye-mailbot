@@ -4,6 +4,7 @@ node_modules
 attachments
 
 config/mbsync.conf
+config/mbsync.cfg
 config/config.json
 config/*.json
 config/*.conf

@@ -1,18 +1,21 @@
 const { DateTime } = require('luxon')
-const crypto = require('crypto')
-
-const MailBot = require('../lib/mailbot')
-const ClassificationCache = require('./cache')
-const TheEyeIndicator = require('../lib/indicator')
-const config = require('../lib/config').decrypt()
-const filters = require(process.env.CLASSIFICATION_RULEZ_PATH)
+const MailBotFolder = require('lib/mailbot-folder')
+const MailBot = require('lib/mailbot')
+const ClassificationCache = require('lib/classify-cache')
+const TheEyeIndicator = require('lib/indicator')
+// const config = require('lib/config').decrypt()
+const config = require('config/config.json')
+// const filters = require(process.env.CLASSIFICATION_RULEZ_PATH)
+const filters = require('config/classificationRulez.json')
+const mbsync = require('lib/mbsync')
 const tz = 'America/Argentina/Buenos_Aires'
+
+const mailbotToggle = config.mbsync
 
 const main = module.exports = async () => {
 
   const classificationCache = new ClassificationCache({ cacheId: 'classification' })
-  const mailBot = new MailBot(config)
-  await mailBot.connect()
+  const mailBot = await createMailbotInstance(mailbotToggle)
 
   for (const filter of filters) {
 
@@ -30,12 +33,12 @@ const main = module.exports = async () => {
       ['SUBJECT', `${filter.subject}`]
     ]
 
-    //const lowTime = filter.thresholdTimes.low
-    //const highTime = filter.thresholdTimes.high
+    const runtimeDate = new Date(classificationCache.data.runtimeDate)
+    const times = filter.thresholdTimes
 
-    const minFilterDate = getFormattedThresholdDate(filter.thresholdTimes.start,tz, classificationCache.data['runtimeDate'])
-    const maxFilterDate = getFormattedThresholdDate(filter.thresholdTimes.success,tz, classificationCache.data['runtimeDate'])
-    const criticalFilterDate = getFormattedThresholdDate(filter.thresholdTimes.critical,tz, classificationCache.data['runtimeDate'])
+    //const minFilterDate = getFormattedThresholdDate(times.start, tz, runtimeDate)
+    const maxFilterDate = getFormattedThresholdDate(times.success, tz, runtimeDate)
+    const criticalFilterDate = getFormattedThresholdDate(times.critical, tz, runtimeDate)
 
     const currentDate = DateTime.now().setZone(tz)
     const messages = await mailBot.searchMessages(searchCriteria)
@@ -46,6 +49,7 @@ const main = module.exports = async () => {
 
     if (messages.length > 0) {
       for (const message of messages) {
+        console.log(`Messages with matching filter: ${messages.length}`)
         const mailDate = adjustTimezone(mailBot.getDate(message))
 
         if (mailDate < maxFilterDate) {
@@ -88,10 +92,13 @@ const main = module.exports = async () => {
       await indicator.put()
     }
   }
-
-  await mailBot.closeConnection()
+  
+  if(mailbotToggle) await mbsync('push')
 }
 
+/**
+ * @param {Date} mailDate
+ */
 const adjustTimezone = (mailDate) => {
   const date = DateTime
     .fromISO(mailDate.toISOString())
@@ -99,20 +106,40 @@ const adjustTimezone = (mailDate) => {
   return date 
 }
 
+/**
+ * @param {String} time format 'HH:mm'
+ * @param {String} tz timezone string
+ * @param {Date} startingDate
+ */
 const getFormattedThresholdDate = (time, tz, startingDate) => {
-  if (!time) return null
+  if (!time) { return null }
 
-  let date = DateTime.fromISO(startingDate).setZone(tz)
+  let date = DateTime.fromISO( startingDate.toISOString() ).setZone(tz)
   const hours = time.substring(0, 2)
   const minutes = time.substring(3, 5)
 
   // Agregar al config  { ..., "startOfDay" : "14:00", ... }
   if (time < config.startOfDay) {
-    date = date.plus({days:1})
+    date = date.plus({ days: 1 })
   }
 
   return date.set({ hours, minutes, seconds: 0 })
 }
+
+/**
+ * @param {Boolean} mailbotToggle
+ */
+const createMailbotInstance = async (mailbotToggle) => {
+  if(mailbotToggle) {
+    await mbsync("pull")
+    return new MailBotFolder(config)
+  } else {
+    const mailBot = new MailBot(config)
+    await mailBot.connect()
+    return mailBot
+  }
+}
+
 
 if (require.main === module) {
   main().then(console.log).catch(console.error)

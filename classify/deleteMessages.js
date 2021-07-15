@@ -1,20 +1,18 @@
 const { DateTime } = require('luxon')
-
-const MailBot = require('../lib/mailbot-folder')
-const config = require('../config/config.json')
+const MailBotFolder = require('lib/mailbot-folder')
+const MailBot = require('lib/mailbot')
+const config = require('config/config.json')
+// const config = require('lib/config').decrypt()
 const tz = 'America/Argentina/Buenos_Aires'
 
-const deletionStamp = config.deletionStamp //In hours
+const deletionUpToHours = config.deletionPolicies.hours //In hours
+const mailbotToggle = config.mbsync
 
 const main = module.exports = async () => {
 
-  const mailBot = new MailBot(config)
+  const mailBot = await createMailbotInstance(mailbotToggle)
 
-    const searchCriteria = [
-      ['BODY', ``],
-      ['FROM', ``],
-      ['SUBJECT', ``]
-    ]
+  const searchCriteria = ['ALL']
 
     const currentDate = DateTime.now().setZone(tz)
     console.log(`CurrentDate: ${currentDate.toFormat('dd MMMM, yyyy')}`)
@@ -25,11 +23,11 @@ const main = module.exports = async () => {
 
     for(const message of messages) {
       const mailDate = adjustTimezone(mailBot.getDate(message))
-      const delDate = mailDate.plus({ hours: deletionStamp })
+      const hoursSinceReceived = (currentDate - mailDate)/3600000
       console.log(`MailDate: ${mailDate.toFormat('dd MMMM, yyyy')}`)
-      console.log(`DeletionDate: ${delDate.toFormat('dd MMMM, yyyy')}`)
+      console.log(`Hours since reception: ${hoursSinceReceived}`)
       
-      if(currentDate > delDate) {
+      if(hoursSinceReceived >= deletionUpToHours) {
         mailBot.deleteMessage(message)
         deletedMessages++
       }
@@ -38,6 +36,22 @@ const main = module.exports = async () => {
     return `Total messages: ${totalMessages}, Deleted Messages: ${deletedMessages}`
 }
 
+/**
+ * @param {Boolean} mailbotToggle
+ */
+ const createMailbotInstance = async (mailbotToggle) => {
+  if(mailbotToggle) {
+    return new MailBotFolder(config)
+  } else {
+    const mailBot = new MailBot(config)
+    await mailBot.connect()
+    return mailBot
+  }
+}
+
+/**
+ * @param {Date} mailDate
+ */
 const adjustTimezone = (mailDate) => {
   const date = DateTime
     .fromISO(mailDate.toISOString())

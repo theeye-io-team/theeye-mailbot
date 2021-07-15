@@ -7,7 +7,7 @@ export LC_ALL=en_US.UTF-8
 mailbot="${MAILBOT_WORKING_DIRECTORY}"
 folder="HSBC"
 folder_procesados="HSBC_Procesados"
-
+echo ${MBSYNC_CONFIG_FILE}
 # pull or push
 actionParam="${MBSYNC_SYNC_ACTION}"
 
@@ -34,7 +34,7 @@ main () {
   #	mbsync --pull -D -V -c ${MBSYNC_CONFIG_FILE} gmail
   #fi
   
-  mbsync -c  ${MBSYNC_CONFIG_FILE} gmail
+  mbsync --${actionParam} -c ${MBSYNC_CONFIG_FILE} gmail
   
 #   for file in ${mailbot}/${folder}/new/* ${mailbot}/${folder}/cur/*
 #   do

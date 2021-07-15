@@ -1,6 +1,7 @@
-const TheEyeIndicator = require('../lib/indicator')
-const Cache = require('../lib/cache')
-const config = require('../lib/config').decrypt()
+const TheEyeIndicator = require('lib/indicator')
+const Cache = require('lib/cache')
+const config = require('config/config.json')
+// const config = require('lib/config').decrypt()
 
 const main = module.exports = async () => {
 
