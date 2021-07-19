@@ -1,9 +1,10 @@
 const { DateTime } = require('luxon')
 const MailBotFolder = require('lib/mailbot-folder')
 const MailBot = require('lib/mailbot')
-const config = require('config/config.json')
-// const config = require('lib/config').decrypt()
+// const config = require('config/config.json')
+const config = require('lib/config').decrypt()
 const tz = 'America/Argentina/Buenos_Aires'
+const mbsync = require('lib/mbsync')
 
 const deletionUpToHours = config.deletionPolicies.hours //In hours
 const mailbotToggle = config.mbsync
@@ -32,7 +33,7 @@ const main = module.exports = async () => {
         deletedMessages++
       }
     }
-
+    if(mailbotToggle) await mbsync('push')
     return `Total messages: ${totalMessages}, Deleted Messages: ${deletedMessages}`
 }
 
@@ -41,6 +42,7 @@ const main = module.exports = async () => {
  */
  const createMailbotInstance = async (mailbotToggle) => {
   if(mailbotToggle) {
+    await mbsync("pull")
     return new MailBotFolder(config)
   } else {
     const mailBot = new MailBot(config)

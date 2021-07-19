@@ -16,14 +16,14 @@ main () {
   [ ! -d "${mailbot}/${folder}" ] && mkdir -p "${mailbot}/${folder}"
   [ ! -d "${mailbot}/${folder_procesados}" ] && mkdir -p "${mailbot}/${folder_procesados}"
   
-  tempPath="${mailbot}/procesa_${folder}_tmp"
-  if [[ ! -d ${tempPath} ]]
-  then 
-	  mkdir ${tempPath}
-  fi
+  # tempPath="${mailbot}/procesa_${folder}_tmp"
+  # if [[ ! -d ${tempPath} ]]
+  # then 
+	#   mkdir ${tempPath}
+  # fi
 
   # CLEAN TMP
-  rm "${tempPath}/*"
+  # rm "${tempPath}/*"
 
   #if [[ "${actionParam}" -eq "push" ]]
   #then
