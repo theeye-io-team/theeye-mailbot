@@ -1,22 +1,23 @@
-const EncConfig = require('../lib/config')
+const config = require('../lib/config').decrypt()
 const MailBot = require('../lib/mailbot')
 
 const main = module.exports = async () => {
 
-  const config = EncConfig.decrypt()
-
   const mailBot = new MailBot(config)
 
-  console.log('connecting ..')
+  console.log('connecting...')
   await mailBot.connect()
   console.log('connected!')
 
-  console.log('fetching messages ..')
-  const messages = await mailBot.fetchMessages()
+  console.log('fetching messages...')
+  const messages = await mailBot.searchMessages([['UID',102]])
 
-  console.log('closing connection..')
-  await mailBot.closeConnection()
-  return 'ok'
+  console.log(`fetched ${messages.length} messages`)
+  console.log(messages.forEach(message=>console.log(message.attributes.uid)))
+
+  console.log('closing connection...')
+  await mailBot.disconnect()
+  return true
 }
 
 main().then(console.log).catch(console.error)

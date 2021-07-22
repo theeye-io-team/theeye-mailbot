@@ -3,19 +3,19 @@ const MailBotFolder = require('lib/mailbot-folder')
 const MailBot = require('lib/mailbot')
 const ClassificationCache = require('lib/classify-cache')
 const TheEyeIndicator = require('lib/indicator')
+const helpers = require('lib/helpers')
 const config = require('lib/config').decrypt()
-// const config = require('config/config.json')
 const filters = require(process.env.CLASSIFICATION_RULEZ_PATH)
-// const filters = require('config/classificationRulez.json')
-const mbsync = require('lib/mbsync')
 const tz = 'America/Argentina/Buenos_Aires'
 
-const mailbotToggle = config.mbsync
+const useNodeImap = config.useNodeImap
 
 const main = module.exports = async () => {
 
   const classificationCache = new ClassificationCache({ cacheId: 'classification' })
-  const mailBot = await createMailbotInstance(mailbotToggle)
+  const mailBot = createMailbotInstance(useNodeImap)
+
+  await mailBot.connect()
 
   for (const filter of filters) {
 
@@ -25,13 +25,10 @@ const main = module.exports = async () => {
       continue
     }
 
-    console.log(filter)
+    // console.log(filter)
 
-    const searchCriteria = [
-      ['BODY', `${filter.body}`],
-      ['FROM', `${filter.from}`],
-      ['SUBJECT', `${filter.subject}`]
-    ]
+    // The order of the filter must be consistent with the order in the config file
+    const searchCriteria = helpers.buildSearchCriteria([`${filter.from}`,`${filter.subject}`,`${filter.body}`], config.searchCriteria)
 
     const runtimeDate = new Date(classificationCache.data.runtimeDate)
     const times = filter.thresholdTimes
@@ -48,6 +45,7 @@ const main = module.exports = async () => {
     const indicatorDescription = filter.indicatorDescription
 
     if (messages.length > 0) {
+      
       for (const message of messages) {
         console.log(`Messages with matching filter: ${messages.length}`)
         const mailDate = adjustTimezone(mailBot.getDate(message))
@@ -92,8 +90,7 @@ const main = module.exports = async () => {
       await indicator.put()
     }
   }
-  
-  if(mailbotToggle) await mbsync('push')
+  await mailBot.disconnect()
 }
 
 /**
@@ -127,17 +124,13 @@ const getFormattedThresholdDate = (time, tz, startingDate) => {
 }
 
 /**
- * @param {Boolean} mailbotToggle
+ * @param {Boolean} useNodeImap
  */
-const createMailbotInstance = async (mailbotToggle) => {
-  if(mailbotToggle) {
-    await mbsync("pull")
-    return new MailBotFolder(config)
-  } else {
-    const mailBot = new MailBot(config)
-    await mailBot.connect()
-    return mailBot
-  }
+ const createMailbotInstance = (useNodeImap) => {
+  if(useNodeImap) {
+    return new MailBot(config)
+  } 
+  return new MailBotFolder(config)
 }
 
 

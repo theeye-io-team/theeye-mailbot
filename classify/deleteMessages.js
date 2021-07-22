@@ -1,23 +1,29 @@
 const { DateTime } = require('luxon')
 const MailBotFolder = require('lib/mailbot-folder')
 const MailBot = require('lib/mailbot')
-// const config = require('config/config.json')
 const config = require('lib/config').decrypt()
+// const helpers = require('lib/helpers') // For filter use
 const tz = 'America/Argentina/Buenos_Aires'
 const mbsync = require('lib/mbsync')
 
 const deletionUpToHours = config.deletionPolicies.hours //In hours
-const mailbotToggle = config.mbsync
+const useNodeImap = config.useNodeImap
 
 const main = module.exports = async () => {
 
   const mailBot = await createMailbotInstance(mailbotToggle)
-
-  const searchCriteria = ['ALL']
+  await mailBot.connect()
 
     const currentDate = DateTime.now().setZone(tz)
     console.log(`CurrentDate: ${currentDate.toFormat('dd MMMM, yyyy')}`)
-    const messages = await mailBot.searchMessages(searchCriteria)
+  
+  // Filter
+  // The order of the filter must be consistent with the order in the config file
+  // const searchCriteria = helpers.buildSearchCriteria([`${filter.from}`,`${filter.subject}`,`${filter.body}`], config.searchCriteria)
+  // const messages = await mailBot.searchMessages(searchCriteria)
+
+    // No filter, will get everything
+    const messages = await mailBot.searchMessages()
 
     const totalMessages = messages.length
     let deletedMessages = 0
@@ -33,23 +39,22 @@ const main = module.exports = async () => {
         deletedMessages++
       }
     }
-    if(mailbotToggle) await mbsync('push')
+
+    await mailBot.disconnect()
+
     return `Total messages: ${totalMessages}, Deleted Messages: ${deletedMessages}`
 }
 
 /**
- * @param {Boolean} mailbotToggle
+ * @param {Boolean} useNodeImap
  */
- const createMailbotInstance = async (mailbotToggle) => {
-  if(mailbotToggle) {
-    await mbsync("pull")
-    return new MailBotFolder(config)
-  } else {
-    const mailBot = new MailBot(config)
-    await mailBot.connect()
-    return mailBot
-  }
+ const createMailbotInstance = (useNodeImap) => {
+  if(useNodeImap) {
+    return new MailBot(config)
+  } 
+  return new MailBotFolder(config)
 }
+
 
 /**
  * @param {Date} mailDate
