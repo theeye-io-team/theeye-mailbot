@@ -1,6 +1,5 @@
-const path = require('path')
-
-module.exports = {
+{
+  "startOfDay": "00:00",
   "imap": {
     "user": "",
     "password": "",
@@ -11,8 +10,8 @@ module.exports = {
   },
   "folders": {
     "INBOX": "AP",
-    "processed": "AP_adjuntosDescargados",
-    "notProcessed": "AP_adjuntosNoProcesados"
+    "processed": "adjuntosDescargados",
+    "notProcessed": "adjuntosNoProcesados"
   },    
   "attachments": {
     "allowed": {
@@ -25,7 +24,7 @@ module.exports = {
   "searchCriteria": ["ALL"],
   "api": {
     "protocol": "https",
-    "hostname": "tagger-api-dev.theeye.io",
+    "hostname": "",
     "port": 443,
     "accessToken": ""
   }

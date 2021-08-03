@@ -2,11 +2,11 @@ const { DateTime } = require('luxon')
 const crypto = require('crypto')
 
 const MailBot = require('../lib/mailbot')
-const Cache = require('../lib/cache')
+const ClassificationCache = require('./cache')
 const TheEyeIndicator = require('../lib/indicator')
 const config = require('../lib/config').decrypt()
-
 const filters = require(process.env.CLASSIFICATION_RULEZ_PATH)
+const tz = 'America/Argentina/Buenos_Aires'
 
 const main = module.exports = async () => {
 
@@ -33,11 +33,11 @@ const main = module.exports = async () => {
     //const lowTime = filter.thresholdTimes.low
     //const highTime = filter.thresholdTimes.high
 
-    const minFilterDate = getFormattedThresholdDate(filter.thresholdTimes.start)
-    const maxFilterDate = getFormattedThresholdDate(filter.thresholdTimes.success)
-    const criticalFilterDate = getFormattedThresholdDate(filter.thresholdTimes.critical)
+    const minFilterDate = getFormattedThresholdDate(filter.thresholdTimes.start,tz, classificationCache.data['runtimeDate'])
+    const maxFilterDate = getFormattedThresholdDate(filter.thresholdTimes.success,tz, classificationCache.data['runtimeDate'])
+    const criticalFilterDate = getFormattedThresholdDate(filter.thresholdTimes.critical,tz, classificationCache.data['runtimeDate'])
 
-    const currentDate = DateTime.now().setZone('America/Argentina/Buenos_Aires')
+    const currentDate = DateTime.now().setZone(tz)
     const messages = await mailBot.searchMessages(searchCriteria)
 
     const indicator = new TheEyeIndicator(filter.indicatorTitle || filter.subject)
@@ -48,23 +48,16 @@ const main = module.exports = async () => {
       for (const message of messages) {
         const mailDate = adjustTimezone(mailBot.getDate(message))
 
-        //if (minFilterDate > mailDate || (minFilterDate <= mailDate && mailDate < maxFilterDate) ) {
-        //  indicator.state = 'normal'
-        //  await indicator.put()
-        //  await mailBot.moveMessage(message)
-        //  classificationCache.setProcessed(filterHash)
-        //}
-
         if (mailDate < maxFilterDate) {
           indicator.state = 'normal'
-          indicator.setValue(currentDate, indicatorDescription, 'Arrived on time')
+          indicator.setValue(mailDate, indicatorDescription, 'Arrived on time')
           await indicator.put()
           await mailBot.moveMessage(message)
           classificationCache.setProcessed(filterHash)
         //} else if (maxFilterDate <= mailDate) {
         } else {
           indicator.state = 'critical'
-          indicator.setValue(currentDate, indicatorDescription, 'Arrived late')
+          indicator.setValue(mailDate, indicatorDescription, 'Arrived late')
           await indicator.put()
           await mailBot.moveMessage(message)
           classificationCache.setProcessed(filterHash)
@@ -93,7 +86,6 @@ const main = module.exports = async () => {
       indicator.setValue(currentDate, indicatorDescription, message)
       indicator.state = state
       await indicator.put()
-      classificationCache.setProcessed(filterHash)
     }
   }
 
@@ -103,43 +95,23 @@ const main = module.exports = async () => {
 const adjustTimezone = (mailDate) => {
   const date = DateTime
     .fromISO(mailDate.toISOString())
-    .setZone('America/Argentina/Buenos_Aires')
+    .setZone(tz)
   return date 
 }
 
-const getFormattedThresholdDate = (time, tz = 'America/Argentina/Buenos_Aires') => {
+const getFormattedThresholdDate = (time, tz, startingDate) => {
   if (!time) return null
 
-  const date = DateTime.now().setZone(tz)
+  let date = DateTime.fromISO(startingDate).setZone(tz)
   const hours = time.substring(0, 2)
   const minutes = time.substring(3, 5)
 
+  // Agregar al config  { ..., "startOfDay" : "14:00", ... }
+  if (time < config.startOfDay) {
+    date = date.plus({days:1})
+  }
+
   return date.set({ hours, minutes, seconds: 0 })
-}
-
-class ClassificationCache extends Cache {
-  constructor (options) {
-    super(options)
-    // load cached data
-    this.data = this.get()
-  }
-
-  alreadyProcessed (hash) {
-    return this.data[hash] === true
-  }
-
-  setProcessed (hash) {
-    console.log(`flagging processed hash ${hash}`)
-    this.data[hash] = true
-    this.save(this.data)
-    return this
-  }
-
-  createHash (string) {
-    const hash = crypto.createHash('sha1')
-    hash.update(string)
-    return hash.digest('hex')
-  }
 }
 
 if (require.main === module) {

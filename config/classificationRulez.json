@@ -1,114 +1,42 @@
 [
   {
     "from": "facugon@theeye.io",
-    "subject": "CARGA Test",
-    "body": "LA CARGA Test Body",
+    "subject": "Arrived too late",
+    "body": "Prueba llegada tarde",
     "thresholdTimes": {
-      "start": "14:30",
-      "success": "14:40",
-      "low": null,
-      "high": null,
-      "critical": "14:50"
-    },
-    "indicatorTitle": "CargaTest1",
-    "indicatorDescription": "Finaliza la carga del daily Planning"
-  },
-  {
-    "from": "damian@theeye.io",
-    "subject": "CARGA Test",
-    "body": "LA CARGA Test Body",
-    "thresholdTimes": {
-      "start": "14:30",
-      "success": "14:40",
-      "low": null,
-      "high": null,
-      "critical": "14:50"
-    },
-    "indicatorTitle": "CargaTest1",
-    "indicatorDescription": "Finaliza la carga del daily Planning"
-  },
-  {
-    "from": "damian@theeye.io",
-    "subject": "CARGA DEL DAILY PLANNING TWS",
-    "body": "LA CARGA DEL DAILY PLANNING FINALIZO CORRECTAMENTE ATTE",
-    "thresholdTimes": {
-      "start": "13:48",
-      "success": "18:10",
-      "low": null,
-      "high": null,
-      "critical": "19:30"
-    },
-    "indicatorTitle": "Test1",
-    "indicatorDescription": "Finaliza la carga del daily Planning"
-  },
-  {
-    "from": "damian@theeye.io",
-    "subject": "ACTMARP_DM_ - Inicio Dia Control-M cargado Ok",
-    "body": "Mail message from CONTROL-M:",
-    "thresholdTimes": {
-      "start": "14:00",
-      "success": "14:10",
+      "start": "14:10",
+      "success": "15:00",
       "low": null,
       "high": null,
       "critical": null
     },
-    "indicatorTitle": null,
-    "indicatorDescription": "Inicio Dia Control M"
-  },
-  {
-    "from": "damian@theeye.io",
-    "subject": "JOBS PREVREC CD",
-    "body": "APLICACION PRODPREVRECCD CONCLUIDA. (DELETEO DE INPUTS CONNECT DIR)",
+    "indicatorTitle": "Arrived too late",
+    "indicatorDescription": "Llegada Tarde"
+  }, {
+    "from": "facugon@theeye.io",
+    "subject": "First Message",
+    "body": "Comienzo del día",
     "thresholdTimes": {
-      "start": "14:16",
-      "success": "14:20",
+      "start": "17:00",
+      "success": "17:10",
       "low": null,
       "high": null,
       "critical": null
     },
-    "indicatorTitle": null,
-    "indicatorDescription": "Deleteo de imputs Connect Direct"
-  },
-  {
-    "from": "damian@theeye.io",
-    "subject": "PTSARDNC - COMIENZO DE MODO NEXT DAY PCBE",
-    "body": "FIN DEL DIA  - COMIENZO DEL MODO NEXT DAY PCBE - CCI",
+    "indicatorTitle": "First Message",
+    "indicatorDescription": "Comienzo del día"
+  }, {
+    "from": "facugon@theeye.io",
+    "subject": "Last Message",
+    "body": "Fin del día",
     "thresholdTimes": {
-      "start": "18:30",
-      "success": "18:35",
+      "start": "17:50",
+      "success": "18:00",
       "low": null,
       "high": null,
       "critical": null
     },
-    "indicatorTitle": null,
-    "indicatorDescription": "Interbanking"
-  },
-  {
-    "from": "damian@theeye.io",
-    "subject": "XBRAPFIN / FINALIZO CORRIDA DE BRAPEXTRACT ",
-    "body": "No message text - file transfer only",
-    "thresholdTimes": {
-      "start": "20:00",
-      "success": "22:00",
-      "low": null,
-      "high": null,
-      "critical": null
-    },
-    "indicatorTitle": "Test4",
-    "indicatorDescription": "Finaliza corrida de Extracciones de Banelco"
-  },
-  {
-    "from": "asdasd",
-    "subject": "asdasdsa",
-    "body": "fsdfsd",
-    "thresholdTimes": {
-      "start": "13:48",
-      "success": "16:00",
-      "low": null,
-      "high": null,
-      "critical": "16:02"
-    },
-    "indicatorTitle": "Test6",
-    "indicatorDescription": "Caso nunca llegar"
+    "indicatorTitle": "Last Message",
+    "indicatorDescription": "Fin del día"
   }
 ]
