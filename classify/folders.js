@@ -5,7 +5,7 @@ const ClassificationCache = require('./cache')
 const TheEyeIndicator = require('../lib/indicator')
 const config = require('../lib/config').decrypt()
 const filters = require(process.env.CLASSIFICATION_RULEZ_PATH)
-const tz = 'America/Argentina/Buenos_Aires'
+//const tz = 'America/Argentina/Buenos_Aires'
 
 const main = module.exports = async () => {
 
@@ -31,11 +31,11 @@ const main = module.exports = async () => {
     const runtimeDate = new Date(classificationCache.data.runtimeDate)
     const times = filter.thresholdTimes
 
-    const minFilterDate = getFormattedThresholdDate(times.start, tz, runtimeDate)
-    const maxFilterDate = getFormattedThresholdDate(times.success, tz, runtimeDate)
-    const criticalFilterDate = getFormattedThresholdDate(times.critical, tz, runtimeDate)
+    const minFilterDate = getFormattedThresholdDate(times.start, config.timezone, runtimeDate)
+    const maxFilterDate = getFormattedThresholdDate(times.success, config.timezone, runtimeDate)
+    const criticalFilterDate = getFormattedThresholdDate(times.critical, config.timezone, runtimeDate)
 
-    const currentDate = DateTime.now().setZone(tz)
+    const currentDate = DateTime.now().setZone(config.timezone)
     const messages = await mailBot.searchMessages(searchCriteria)
 
     const indicator = new TheEyeIndicator(filter.indicatorTitle || filter.subject)
@@ -91,7 +91,7 @@ const main = module.exports = async () => {
 const adjustTimezone = (mailDate) => {
   const date = DateTime
     .fromISO(mailDate.toISOString())
-    .setZone(tz)
+    .setZone(config.timezone)
   return date 
 }
 
