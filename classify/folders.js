@@ -31,7 +31,7 @@ const main = module.exports = async () => {
     const runtimeDate = new Date(classificationCache.data.runtimeDate)
     const times = filter.thresholdTimes
 
-    //const minFilterDate = getFormattedThresholdDate(times.start, tz, runtimeDate)
+    const minFilterDate = getFormattedThresholdDate(times.start, tz, runtimeDate)
     const maxFilterDate = getFormattedThresholdDate(times.success, tz, runtimeDate)
     const criticalFilterDate = getFormattedThresholdDate(times.critical, tz, runtimeDate)
 
@@ -40,7 +40,7 @@ const main = module.exports = async () => {
 
     const indicator = new TheEyeIndicator(filter.indicatorTitle || filter.subject)
     indicator.accessToken = config.api.accessToken
-    const indicatorDescription = filter.indicatorDescription
+    const indicatorDescription = `<b>${filter.subject}</b> from <b>${filter.from}</b> should arrive between <b>${minFilterDate.toRFC2822()}</b> and <b>${maxFilterDate.toRFC2822()}</b>`
 
     if (messages.length > 0) {
       for (const message of messages) {
