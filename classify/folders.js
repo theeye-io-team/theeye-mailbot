@@ -10,17 +10,22 @@ const filters = require(process.env.CLASSIFICATION_RULEZ_PATH)
 const main = module.exports = async () => {
 
   const classificationCache = new ClassificationCache({ cacheId: 'classification' })
+  console.log(classificationCache.data)
+
   const mailBot = new MailBot(config)
+  const currentDate = DateTime.now().setZone(config.timezone)
+  const runtimeDate = new Date(classificationCache.data.runtimeDate)
+
+  console.log(`runtime date is set to ${runtimeDate}`)
 
   for (const filter of filters) {
+    console.log(filter)
 
     const filterHash = classificationCache.createHash(JSON.stringify(filter))
     if (classificationCache.alreadyProcessed(filterHash) === true) {
-      console.log('rule check time ended.')
+      console.log('rule check already processed. time ended.')
       continue
     }
-
-    console.log(filter)
 
     const searchCriteria = [
       ['BODY', `${filter.body}`],
@@ -28,23 +33,24 @@ const main = module.exports = async () => {
       ['SUBJECT', `${filter.subject}`]
     ]
 
-    const runtimeDate = new Date(classificationCache.data.runtimeDate)
     const times = filter.thresholdTimes
 
     const minFilterDate = getFormattedThresholdDate(times.start, config.timezone, runtimeDate)
     const maxFilterDate = getFormattedThresholdDate(times.success, config.timezone, runtimeDate)
     const criticalFilterDate = getFormattedThresholdDate(times.critical, config.timezone, runtimeDate)
 
-    const currentDate = DateTime.now().setZone(config.timezone)
     const messages = await mailBot.searchMessages(searchCriteria)
 
     const indicator = new TheEyeIndicator(filter.indicatorTitle || filter.subject)
     indicator.accessToken = config.api.accessToken
     const indicatorDescription = `<b>${filter.subject}</b> from <b>${filter.from}</b> should arrive between <b>${minFilterDate.toRFC2822()}</b> and <b>${maxFilterDate.toRFC2822()}</b>`
 
+    console.log(`${messages.length} messages found with search criteria`)
+
     if (messages.length > 0) {
       for (const message of messages) {
         const mailDate = adjustTimezone(mailBot.getDate(message))
+        console.log(`mail date is ${mailDate}`)
 
         if (mailDate < maxFilterDate) {
           indicator.state = 'normal'
