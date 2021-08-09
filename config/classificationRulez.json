@@ -1,42 +1,71 @@
 [
   {
     "from": "facugon@theeye.io",
-    "subject": "Arrived too late",
-    "body": "Prueba llegada tarde",
+    "subject": "Prueba",
+    "body": "Temprano",
     "thresholdTimes": {
-      "start": "14:10",
+      "start": "07:10",
+      "success": "09:00",
+      "low": "10:30",
+      "high": null,
+      "critical": "13:00"
+    },
+    "indicatorTitle": "Prueba Temprano"
+  },
+  {
+    "from": "facugon@theeye.io",
+    "subject": "Test1",
+    "body": "Test1",
+    "thresholdTimes": {
+      "start": "13:00",
       "success": "15:00",
       "low": null,
       "high": null,
-      "critical": null
+      "critical": "16:30"
     },
-    "indicatorTitle": "Arrived too late",
-    "indicatorDescription": "Llegada Tarde"
-  }, {
+    "indicatorTitle": "Test1",
+    "indicatorDescription": "Test1 indicatorDescription"
+  },
+  {
     "from": "facugon@theeye.io",
-    "subject": "First Message",
-    "body": "Comienzo del día",
+    "subject": "Test2",
+    "body": "Test2",
     "thresholdTimes": {
-      "start": "17:00",
+      "start": "15:00",
       "success": "17:10",
       "low": null,
       "high": null,
-      "critical": null
+      "critical": "19:00"
     },
-    "indicatorTitle": "First Message",
-    "indicatorDescription": "Comienzo del día"
-  }, {
+    "indicatorTitle": "Test2",
+    "indicatorDescription": "Test2 indicatorDescription"
+  },
+  {
     "from": "facugon@theeye.io",
-    "subject": "Last Message",
-    "body": "Fin del día",
+    "subject": "Test3",
+    "body": "Test3",
     "thresholdTimes": {
-      "start": "17:50",
-      "success": "18:00",
+      "start": "19:00",
+      "success": "23:00",
+      "low": null,
+      "high": null,
+      "critical": "01:00"
+    },
+    "indicatorTitle": "Test3",
+    "indicatorDescription": "Test3 indicatorDescription"
+  },
+  {
+    "from": "facugon@theeye.io",
+    "subject": "Test4",
+    "body": "Test4",
+    "thresholdTimes": {
+      "start": "00:00",
+      "success": "06:00",
       "low": null,
       "high": null,
       "critical": null
     },
-    "indicatorTitle": "Last Message",
-    "indicatorDescription": "Fin del día"
+    "indicatorTitle": "Test4",
+    "indicatorDescription": "Test4 indicatorDescription"
   }
 ]

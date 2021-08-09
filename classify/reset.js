@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 const TheEyeIndicator = require('../lib/indicator')
 const Cache = require('../lib/cache')
 const config = require('../lib/config').decrypt()
