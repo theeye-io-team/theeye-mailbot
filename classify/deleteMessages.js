@@ -1,15 +1,14 @@
 const { DateTime } = require('luxon')
 const MailBot = require('../lib/mailbot-folder')
 const config = require('../lib/config').decrypt()
-const tz = 'America/Argentina/Buenos_Aires'
 
-const deletionUpToHours = config.deletionPolicies.hours //In hours
 
 const main = module.exports = async () => {
-
   const mailBot = new MailBot(config)
 
-  const currentDate = DateTime.now().setZone(tz)
+  const deletionUpToHours = config.deletionPolicies.hours // In hours
+
+  const currentDate = DateTime.now().setZone(config.timezone)
   console.log(`CurrentDate: ${currentDate.toFormat('dd MMMM, yyyy')}`)
 
   // Filter
@@ -23,13 +22,13 @@ const main = module.exports = async () => {
   const totalMessages = messages.length
   let deletedMessages = 0
 
-  for(const message of messages) {
+  for (const message of messages) {
     const mailDate = adjustTimezone(mailBot.getDate(message))
-    const hoursSinceReceived = (currentDate - mailDate)/3600000
+    const hoursSinceReceived = (currentDate - mailDate) / 3600000
     console.log(`MailDate: ${mailDate.toFormat('dd MMMM, yyyy')}`)
     console.log(`Hours since reception: ${hoursSinceReceived}`)
 
-    if(hoursSinceReceived >= deletionUpToHours) {
+    if (hoursSinceReceived >= deletionUpToHours) {
       mailBot.deleteMessage(message)
       deletedMessages++
     }
@@ -38,15 +37,14 @@ const main = module.exports = async () => {
   return `Total messages: ${totalMessages}, Deleted Messages: ${deletedMessages}`
 }
 
-
 /**
  * @param {Date} mailDate
  */
 const adjustTimezone = (mailDate) => {
   const date = DateTime
     .fromISO(mailDate.toISOString())
-    .setZone(tz)
-  return date 
+    .setZone(config.timezone)
+  return date
 }
 
 if (require.main === module) {
