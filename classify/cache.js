@@ -6,7 +6,7 @@ class ClassificationCache extends Cache {
     super(options)
     // load cached data
     this.data = this.get()
-    this.setRuntimeDate()
+    this.setRuntimeDate(options.runtimeDate)
   }
 
   alreadyProcessed (hash) {
@@ -26,11 +26,12 @@ class ClassificationCache extends Cache {
     return hash.digest('hex')
   }
 
-  setRuntimeDate () {
-    if(!this.data['runtimeDate']) {
-      this.data['runtimeDate'] = new Date()
+  setRuntimeDate (date = null) {
+    if (!this.data.runtimeDate) {
+      this.data.runtimeDate = (date || new Date())
       this.save(this.data)
     }
+
     return this
   }
 }

@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/theeye-io/theeye-mailbot#readme",
   "dependencies": {
+    "dotenv": "^10.0.0",
     "form-data": "~3.0.0",
     "got": "^11.8.1",
     "imap-simple": "~5.0.0",

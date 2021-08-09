@@ -10,3 +10,4 @@ config/*.conf
 cache
 
 mailbot
+.env
