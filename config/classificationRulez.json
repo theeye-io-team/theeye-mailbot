@@ -59,8 +59,8 @@
     "subject": "Test4",
     "body": "Test4",
     "thresholdTimes": {
-      "start": "00:00",
-      "success": "06:00",
+      "start": "01:00",
+      "success": "05:50",
       "low": null,
       "high": null,
       "critical": null

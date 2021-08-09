@@ -139,6 +139,10 @@ const getFormattedThresholdDate = (time, tz, startingDate) => {
   const minutes = time.substring(3, 5)
 
   // Agregar al config  { ..., "startOfDay" : "14:00", ... }
+  if (time === config.startOfDay) {
+    throw new Error(`unexpected time ${time} is equal to startOfDay. change it please`)
+  }
+
   if (time < config.startOfDay) {
     date = date.plus({ days: 1 })
   }
