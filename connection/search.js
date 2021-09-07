@@ -11,17 +11,20 @@ const main = module.exports = async () => {
   console.log(mailBot.connection.serverInfo)
 
   const messages = await mailBot.searchMessages({seen:false})
-  console.log(messages)
 
-  for (let id of messages) {
-    const message =  await mailBot.getMessage(id)
+  console.log(`total ${messages.length}`)
+  for (let message of messages) {
+
     console.log('===============================================')
-    console.log(`Message Seq. ID ${id}`)
+    console.log(`Message Seq. ID ${message.seqId}`)
     console.log('===============================================')
-    console.log(`Attachments: ${message.attachments.length}`)
-    console.log(`From: ${mailBot.getFrom(message)}`)
-    console.log(`Subject: ${mailBot.getSubject(message)}`)
-    console.log(`Body:\n\n ${mailBot.getBody(message)}`)
+    console.log(message)
+    await message.getContent()
+
+    console.log(`Attachments: ${message.data.attachments.length}`)
+    console.log(`From: ${message.from}`)
+    console.log(`Subject: ${message.subject}`)
+    console.log(`Body:\n\n ${message.body}`)
   }
 
   await mailBot.closeConnection()

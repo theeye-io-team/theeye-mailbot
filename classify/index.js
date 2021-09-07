@@ -37,12 +37,6 @@ const main = module.exports = async () => {
       continue
     }
 
-    const searchCriteria = [
-      ['BODY', `${filter.body}`],
-      ['FROM', `${filter.from}`],
-      ['SUBJECT', `${filter.subject}`]
-    ]
-
     const times = filter.thresholdTimes
 
     //
@@ -52,7 +46,7 @@ const main = module.exports = async () => {
     const maxFilterDate = getFormattedThresholdDate(times.success, config.timezone, runtimeDate)
     const criticalFilterDate = getFormattedThresholdDate(times.critical, config.timezone, runtimeDate)
 
-    const messages = await mailBot.searchMessages(searchCriteria)
+    const messages = await mailBot.searchMessages(filter)
 
     const indicator = new TheEyeIndicator(filter.indicatorTitle || filter.subject)
     indicator.accessToken = config.api.accessToken
@@ -88,7 +82,9 @@ const main = module.exports = async () => {
     let found = false
     if (messages.length > 0) {
       for (const message of messages) {
-        const mailDate = adjustTimezone(mailBot.getDate(message))
+        await message.getContent()
+
+        const mailDate = adjustTimezone(message.date)
         console.log(`mail date is ${mailDate}`)
 
         // stop processing old messages
@@ -98,14 +94,14 @@ const main = module.exports = async () => {
             indicator.state = 'normal'
             indicator.setValue(mailDate, indicatorDescription, 'Arrived on time')
             await indicator.put()
-            await mailBot.moveMessage(message)
+            await message.move()
             classificationCache.setProcessed(filterHash)
             //} else if (maxFilterDate <= mailDate) {
           } else {
             indicator.state = 'critical'
             indicator.setValue(mailDate, indicatorDescription, 'Arrived late')
             await indicator.put()
-            await mailBot.moveMessage(message)
+            await message.move()
             classificationCache.setProcessed(filterHash)
           }
         } else {
