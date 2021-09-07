@@ -85,6 +85,7 @@ const main = module.exports = async () => {
       await indicator.put()
     }
 
+    let found = false
     if (messages.length > 0) {
       for (const message of messages) {
         const mailDate = adjustTimezone(mailBot.getDate(message))
@@ -92,6 +93,7 @@ const main = module.exports = async () => {
 
         // stop processing old messages
         if (mailDate > runtimeDate) {
+          found = true
           if (mailDate < maxFilterDate) {
             indicator.state = 'normal'
             indicator.setValue(mailDate, indicatorDescription, 'Arrived on time')
@@ -108,10 +110,11 @@ const main = module.exports = async () => {
           }
         } else {
           console.log(`the message was already processed`)
-          await waitingMessage()
         }
       }
-    } else {
+    }
+
+    if (!found) {
       await waitingMessage()
     }
   }
@@ -139,10 +142,6 @@ const getFormattedThresholdDate = (time, tz, startingDate) => {
   const minutes = time.substring(3, 5)
 
   // Agregar al config  { ..., "startOfDay" : "14:00", ... }
-  if (time === config.startOfDay) {
-    throw new Error(`unexpected time ${time} is equal to startOfDay. change it please`)
-  }
-
   if (time < config.startOfDay) {
     date = date.plus({ days: 1 })
   }
