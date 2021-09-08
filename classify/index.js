@@ -37,12 +37,6 @@ const main = module.exports = async () => {
       continue
     }
 
-    const searchCriteria = [
-      ['BODY', `${filter.body}`],
-      ['FROM', `${filter.from}`],
-      ['SUBJECT', `${filter.subject}`]
-    ]
-
     const times = filter.thresholdTimes
 
     //
@@ -52,7 +46,7 @@ const main = module.exports = async () => {
     const maxFilterDate = getFormattedThresholdDate(times.success, config.timezone, runtimeDate)
     const criticalFilterDate = getFormattedThresholdDate(times.critical, config.timezone, runtimeDate)
 
-    const messages = await mailBot.searchMessages(searchCriteria)
+    const messages = await mailBot.searchMessages(filter)
 
     const indicator = new TheEyeIndicator(filter.indicatorTitle || filter.subject)
     indicator.accessToken = config.api.accessToken
@@ -85,33 +79,38 @@ const main = module.exports = async () => {
       await indicator.put()
     }
 
+    let found = false
     if (messages.length > 0) {
       for (const message of messages) {
-        const mailDate = adjustTimezone(mailBot.getDate(message))
+        await message.getContent()
+
+        const mailDate = adjustTimezone(message.date)
         console.log(`mail date is ${mailDate}`)
 
         // stop processing old messages
         if (mailDate > runtimeDate) {
+          found = true
           if (mailDate < maxFilterDate) {
             indicator.state = 'normal'
             indicator.setValue(mailDate, indicatorDescription, 'Arrived on time')
             await indicator.put()
-            await mailBot.moveMessage(message)
+            await message.move()
             classificationCache.setProcessed(filterHash)
             //} else if (maxFilterDate <= mailDate) {
           } else {
             indicator.state = 'critical'
             indicator.setValue(mailDate, indicatorDescription, 'Arrived late')
             await indicator.put()
-            await mailBot.moveMessage(message)
+            await message.move()
             classificationCache.setProcessed(filterHash)
           }
         } else {
           console.log(`the message was already processed`)
-          await waitingMessage()
         }
       }
-    } else {
+    }
+
+    if (!found) {
       await waitingMessage()
     }
   }
@@ -139,10 +138,6 @@ const getFormattedThresholdDate = (time, tz, startingDate) => {
   const minutes = time.substring(3, 5)
 
   // Agregar al config  { ..., "startOfDay" : "14:00", ... }
-  if (time === config.startOfDay) {
-    throw new Error(`unexpected time ${time} is equal to startOfDay. change it please`)
-  }
-
   if (time < config.startOfDay) {
     date = date.plus({ days: 1 })
   }

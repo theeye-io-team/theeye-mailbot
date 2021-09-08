@@ -56,11 +56,11 @@
   },
   {
     "from": "facugon@theeye.io",
-    "subject": "Test4",
-    "body": "Test4",
+    "subject": "Test 4",
+    "body": "Un mensaje bastante largo",
     "thresholdTimes": {
-      "start": "01:00",
-      "success": "05:50",
+      "start": "13:00",
+      "success": "19:50",
       "low": null,
       "high": null,
       "critical": null

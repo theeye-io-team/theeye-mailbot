@@ -85,6 +85,7 @@ const main = module.exports = async () => {
       await indicator.put()
     }
 
+    let found = false
     if (messages.length > 0) {
       for (const message of messages) {
         const mailDate = adjustTimezone(mailBot.getDate(message))
@@ -92,6 +93,7 @@ const main = module.exports = async () => {
 
         // stop processing old messages
         if (mailDate > runtimeDate) {
+          found = true
           if (mailDate < maxFilterDate) {
             indicator.state = 'normal'
             indicator.setValue(mailDate, indicatorDescription, 'Arrived on time')
@@ -108,10 +110,11 @@ const main = module.exports = async () => {
           }
         } else {
           console.log(`the message was already processed`)
-          await waitingMessage()
         }
       }
-    } else {
+    }
+
+    if (!found) {
       await waitingMessage()
     }
   }
