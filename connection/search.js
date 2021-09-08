@@ -14,11 +14,13 @@ const main = module.exports = async () => {
 
   console.log(`total ${messages.length}`)
   for (let message of messages) {
+    await message.getId()
 
     console.log('===============================================')
     console.log(`Message Seq. ID ${message.seqId}`)
     console.log('===============================================')
     console.log(message)
+
     await message.getContent()
 
     console.log(`Attachments: ${message.data.attachments.length}`)
