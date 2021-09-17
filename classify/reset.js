@@ -5,7 +5,6 @@ const Cache = require('../lib/cache')
 const config = require('../lib/config').decrypt()
 
 const main = module.exports = async () => {
-
   const cache = new Cache({ cacheId: 'classification' })
   cache.drop()
 
@@ -19,7 +18,6 @@ const main = module.exports = async () => {
     await indicator.remove()
   }
 }
-
 
 if (require.main === module) {
   main().then(console.log).catch(console.error)
