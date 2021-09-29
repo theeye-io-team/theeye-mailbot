@@ -6,6 +6,7 @@ const DEFAULT_CACHE_NAME = "classification"
 
 const { DateTime } = require('luxon')
 
+const Helpers = require('../lib/helpers')
 const MailBot = require('../lib/mailbot')
 const ClassificationCache = require('./cache')
 const TheEyeIndicator = require('../lib/indicator')
@@ -37,16 +38,20 @@ const main = module.exports = async () => {
       continue
     }
 
-    const times = filter.thresholdTimes
+    const thresholds = filter.thresholdTimes
 
     //
     // @TODO validar. el rango de las reglas de filtrado no pueden contener la hora de inicio del día. rompe la logica
     //
-    const minFilterDate = getFormattedThresholdDate(times.start, config.timezone, runtimeDate)
-    const maxFilterDate = getFormattedThresholdDate(times.success, config.timezone, runtimeDate)
-    const criticalFilterDate = getFormattedThresholdDate(times.critical, config.timezone, runtimeDate)
+    const minFilterDate = getFormattedThresholdDate(thresholds.start, config.timezone, runtimeDate)
+    const maxFilterDate = getFormattedThresholdDate(thresholds.success, config.timezone, runtimeDate)
+    const criticalFilterDate = getFormattedThresholdDate(thresholds.critical, config.timezone, runtimeDate)
 
-    const messages = await mailBot.searchMessages(filter)
+    const messages = await mailBot.searchMessages(
+      Object.assign({}, filter, {
+        since: Helpers.timeExpressionToDate(thresholds.start, config.timezone).toISOString()
+      })
+    )
 
     const indicator = new TheEyeIndicator(filter.indicatorTitle || filter.subject)
     indicator.accessToken = config.api.accessToken
@@ -87,7 +92,7 @@ const main = module.exports = async () => {
         const mailDate = adjustTimezone(message.date)
         console.log(`mail date is ${mailDate}`)
 
-        // stop processing old messages
+        // ignore old messages
         if (mailDate > runtimeDate) {
           found = true
           if (mailDate < maxFilterDate) {

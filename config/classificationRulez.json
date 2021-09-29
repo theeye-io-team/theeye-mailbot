@@ -1,6 +1,20 @@
 [
   {
     "from": "facugon@theeye.io",
+    "subject": "Prueba Corrimiento",
+    "body": "Llegada -3 horas",
+    "timezone": "UTC",
+    "thresholdTimes": {
+      "start": "10:00",
+      "success": "10:10",
+      "low": "10:20",
+      "high": "10:30",
+      "critical": "10:40"
+    },
+    "indicatorTitle": "Prueba Corrimiento"
+  },
+  {
+    "from": "facugon@theeye.io",
     "subject": "Prueba",
     "body": "Temprano",
     "thresholdTimes": {
