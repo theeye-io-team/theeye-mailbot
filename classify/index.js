@@ -15,6 +15,8 @@ const filters = require('../filters')
 
 const main = module.exports = async () => {
 
+  const { timezone } = config
+
   const classificationCache = new ClassificationCache({
     cacheId: (config.cacheName || DEFAULT_CACHE_NAME),
     runtimeDate: buildRuntimeDate(config)
@@ -27,14 +29,16 @@ const main = module.exports = async () => {
 
   const mailBot = new MailBot(config)
   await mailBot.connect()
-  const currentDate = DateTime.now().setZone(config.timezone)
+  const currentDate = DateTime.now().setZone(timezone)
 
+  let index = 0, progress = 0
   for (const filter of filters) {
     console.log(filter)
 
     const filterHash = classificationCache.createHash(JSON.stringify(filter))
     if (classificationCache.alreadyProcessed(filterHash) === true) {
-      console.log('rule check already processed. time ended.')
+      progress++
+      console.log('Skip this rule. Already checked.')
       continue
     }
 
@@ -43,45 +47,43 @@ const main = module.exports = async () => {
     //
     // @TODO validar. el rango de las reglas de filtrado no pueden contener la hora de inicio del día. rompe la logica
     //
-    const minFilterDate = getFormattedThresholdDate(thresholds.start, config.timezone, runtimeDate)
-    const maxFilterDate = getFormattedThresholdDate(thresholds.success, config.timezone, runtimeDate)
-    const criticalFilterDate = getFormattedThresholdDate(thresholds.critical, config.timezone, runtimeDate)
+    const minFilterDate = getFormattedThresholdDate(thresholds.start, timezone, runtimeDate)
+    const maxFilterDate = getFormattedThresholdDate(thresholds.success, timezone, runtimeDate)
+    const criticalFilterDate = getFormattedThresholdDate(thresholds.critical, timezone, runtimeDate)
+
+    //
+    // ignore rules not inprogress. skip early checks
+    //
+    if (minFilterDate > currentDate) {
+      console.log('Skip this rule. Not started yet')
+      continue
+    }
+
+    progress++
 
     const messages = await mailBot.searchMessages(
       Object.assign({}, filter, {
-        since: Helpers.timeExpressionToDate(thresholds.start, config.timezone).toISOString()
+        since: Helpers.timeExpressionToDate(thresholds.start, timezone).toISOString()
       })
     )
 
-    const indicator = new TheEyeIndicator(filter.indicatorTitle || filter.subject)
-    indicator.accessToken = config.api.accessToken
-    const indicatorDescription = `<b>${filter.subject}</b> from <b>${filter.from}</b> should arrive between <b>${minFilterDate.toRFC2822()}</b> and <b>${maxFilterDate.toRFC2822()}</b>`
-
     console.log(`${messages.length} messages found with search criteria`)
 
-    const waitingMessage = async () => {
-      let indicatorValue
+    const indicatorState = () => {
       if (currentDate < maxFilterDate) {
-        indicatorValue = 'Waiting message...'
-        state = 'normal'
+        state = ''
       } else {
         if (criticalFilterDate !== null) {
           if (currentDate < criticalFilterDate) {
-            indicatorValue = 'Waiting message...'
             state = 'failure'
           } else {
-            indicatorValue = 'Timeout reach!'
             state = 'critical'
           }
         } else {
-          indicatorValue = 'Timeout reach!'
           state = 'critical'
         }
       }
-
-      indicator.setValue(currentDate, indicatorDescription, indicatorValue)
-      indicator.state = state
-      await indicator.put()
+      return state
     }
 
     let found = false
@@ -89,45 +91,74 @@ const main = module.exports = async () => {
       for (const message of messages) {
         await message.getContent()
 
-        const mailDate = adjustTimezone(message.date)
+        const mailDate = setTimezone(message.date, timezone)
         console.log(`mail date is ${mailDate}`)
 
         // ignore old messages
         if (mailDate > runtimeDate) {
           found = true
           if (mailDate < maxFilterDate) {
-            indicator.state = 'normal'
-            indicator.setValue(mailDate, indicatorDescription, 'Arrived on time')
-            await indicator.put()
+            await handleIndicator({
+              order: filters.length - index,
+              date: mailDate,
+              label: 'On Time',
+              state: 'normal',
+              filter,
+              minDate: minFilterDate,
+              maxDate: maxFilterDate
+            })
             await message.move()
             classificationCache.setProcessed(filterHash)
-            //} else if (maxFilterDate <= mailDate) {
           } else {
-            indicator.state = 'critical'
-            indicator.setValue(mailDate, indicatorDescription, 'Arrived late')
-            await indicator.put()
+            await handleIndicator({
+              order: filters.length - index,
+              date: mailDate,
+              label: 'Late',
+              state: 'critical',
+              filter,
+              minDate: minFilterDate,
+              maxDate: maxFilterDate
+            })
             await message.move()
             classificationCache.setProcessed(filterHash)
           }
         } else {
-          console.log(`the message was already processed`)
+          console.log(`Old message`)
         }
       }
     }
 
     if (!found) {
-      await waitingMessage()
+      const state = indicatorState()
+
+      await handleIndicator({
+        order: filters.length - index,
+        date: currentDate ,
+        label: 'Waiting',
+        state,
+        filter,
+        minDate: minFilterDate,
+        maxDate: maxFilterDate
+      })
     }
+
+    index++
   }
+
+  await handleProgressIndicator(progress*100/filters.length, timezone)
 
   await mailBot.closeConnection()
 }
 
-const adjustTimezone = (date) => {
-  const dateTime = DateTime
+/**
+ * @param {Date} date
+ * @param {String} timezone
+ * @return {DateTime} luxon
+ */
+const setTimezone = (date, timezone) => {
+  return DateTime
     .fromISO(date.toISOString())
-    .setZone(config.timezone)
-  return dateTime
+    .setZone(timezone)
 }
 
 /**
@@ -160,7 +191,6 @@ const getFormattedThresholdDate = (time, tz, startingDate) => {
  *
  */
 const buildRuntimeDate = ({ startOfDay, timezone }) => {
-
   const runtimeDate = DateTime.now().setZone(timezone)
 
   const hours = startOfDay.substring(0, 2)
@@ -168,6 +198,42 @@ const buildRuntimeDate = ({ startOfDay, timezone }) => {
 
   const isoString = runtimeDate.set({ hours, minutes, seconds: 0 }).toISO()
   return new Date(isoString)
+}
+
+const handleProgressIndicator = (progress, timezone) => {
+  const date = DateTime.now().setZone(timezone).toFormat('HH:mm')
+
+  const indicator = new TheEyeIndicator(config.classify?.progress_title||'Progress')
+  indicator.order = 0
+  indicator.accessToken = config.api.accessToken
+  indicator.value = progress
+  indicator.state = 'normal'
+  indicator.type = 'progress'
+
+  return indicator.put()
+}
+
+const handleIndicator = ({ order, state, date, label, filter, minDate, maxDate }) => {
+  const time = date.toFormat('HH:mm')
+
+  const value = `
+    <table class="table">
+      <tr><th>From</th><td>${filter.from}</td></tr>
+      <tr><th>Subject</th><td>${filter.subject}</td></tr>
+      <tr><th>Body</th><td>${filter.body}</td></tr>
+      <tr><th>Start</th><td>${minDate.toRFC2822()}</td></tr>
+      <tr><th>End</th><td>${maxDate.toRFC2822()}</td></tr>
+      <tr><th><b>Result</b></th><td><b>${time} - ${label}</b></td></tr>
+    </table>
+    `
+
+  const indicator = new TheEyeIndicator(filter.indicatorTitle || filter.subject)
+  indicator.order = order
+  indicator.accessToken = config.api.accessToken
+  indicator.value = value
+  indicator.state = state
+
+  return indicator.put()
 }
 
 if (require.main === module) {
