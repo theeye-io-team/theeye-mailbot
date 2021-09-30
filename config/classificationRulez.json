@@ -1,6 +1,6 @@
 [
   {
-    "from": "facugon@theeye.io",
+    "from": "blyatzkrieg@gmail.com",
     "subject": "Prueba Corrimiento",
     "body": "Llegada -3 horas",
     "timezone": "UTC",
@@ -14,7 +14,7 @@
     "indicatorTitle": "Prueba Corrimiento"
   },
   {
-    "from": "facugon@theeye.io",
+    "from": "blyatzkrieg@gmail.com",
     "subject": "Prueba",
     "body": "Temprano",
     "thresholdTimes": {
@@ -27,7 +27,7 @@
     "indicatorTitle": "Prueba Temprano"
   },
   {
-    "from": "facugon@theeye.io",
+    "from": "blyatzkrieg@gmail.com",
     "subject": "Test1",
     "body": "Test1",
     "thresholdTimes": {

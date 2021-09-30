@@ -25,6 +25,7 @@
     "luxon": "~1.26.0",
     "mailparser": "~3.1.0",
     "qs": "~6.9.6",
-    "rfc2047": "^3.0.1"
+    "rfc2047": "^3.0.1",
+    "theeye-bot-sdk": "git+https://github.com/theeye-io/theeye-bot-sdk.git"
   }
 }
