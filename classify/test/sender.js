@@ -10,7 +10,7 @@ const config = require('../../lib/config').decrypt()
 const nodemailer = require('nodemailer')
 const filters = require('../../filters')
 
-const main = async () => {
+const main = module.exports = async () => {
   const cache = new Cache({ cacheId: CACHE_NAME })
   const cacheData = cache.get()
 
