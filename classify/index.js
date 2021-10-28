@@ -91,7 +91,12 @@ const main = module.exports = async () => {
       for (const message of messages) {
         await message.getContent()
 
-        const mailDate = setTimezone(message.date, timezone)
+        let mailDate
+        if (filter.ignoreMessageTimezone === true) {
+          mailDate = ignoreOriginalTimezone(message.date, timezone)
+        } else {
+          mailDate = setTimezone(message.date, timezone)
+        }
         console.log(`mail date is ${mailDate}`)
 
         // ignore old messages
@@ -151,6 +156,8 @@ const main = module.exports = async () => {
 }
 
 /**
+ * Change date to the timezone
+ *
  * @param {Date} date
  * @param {String} timezone
  * @return {DateTime} luxon
@@ -159,6 +166,23 @@ const setTimezone = (date, timezone) => {
   return DateTime
     .fromISO(date.toISOString())
     .setZone(timezone)
+}
+
+/**
+ * Keep the same date ignoring the original Timezone.
+ * This is assuming that the original timezone is wrong
+ * and it must be replaced by the real arrival time.
+ *
+ * @param {Date} date
+ * @param {String} timezone
+ * @return {DateTime} luxon
+ */
+const ignoreOriginalTimezone = (date, timezone) => {
+  // use toISOString formatter in UTC/Zero timezone and remove the timezone part 
+  const trimmedDate = date.toISOString().replace(/\.[0-9]{3}Z$/,'')
+  // create a new Date and initialize it using the desired timezone
+  const tzDate = DateTime.fromISO(trimmedDate, { zone: timezone })
+  return tzDate
 }
 
 /**

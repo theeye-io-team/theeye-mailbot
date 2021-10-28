@@ -26,8 +26,11 @@ const main = module.exports = async (ruleNumber) => {
   //console.log(`${messages.length} messages found with search criteria`)
 
   for (let message of messages) {
-    const data = await message.getContent()
-    console.log(data)
+    await message.getContent()
+    console.log('==========================')
+    console.log('raw data', message.rawData)
+    console.log('==========================')
+    console.log('parsed data', message.data)
   }
 
   await mailBot.closeConnection()

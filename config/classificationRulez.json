@@ -1,44 +1,17 @@
 [
   {
-    "from": "blyatzkrieg@gmail.com",
+    "from": "facugon@theeye.io",
     "subject": "Prueba Corrimiento",
     "body": "Llegada -3 horas",
-    "timezone": "UTC",
+    "ignoreMessageTimezone": true,
     "thresholdTimes": {
-      "start": "10:00",
-      "success": "10:10",
-      "low": "10:20",
-      "high": "10:30",
-      "critical": "10:40"
+      "start": "16:00",
+      "success": "16:30",
+      "low": "16:40",
+      "high": "16:50",
+      "critical": "17:00"
     },
     "indicatorTitle": "Prueba Corrimiento"
-  },
-  {
-    "from": "blyatzkrieg@gmail.com",
-    "subject": "Prueba",
-    "body": "Temprano",
-    "thresholdTimes": {
-      "start": "07:10",
-      "success": "09:00",
-      "low": "10:30",
-      "high": null,
-      "critical": "13:00"
-    },
-    "indicatorTitle": "Prueba Temprano"
-  },
-  {
-    "from": "blyatzkrieg@gmail.com",
-    "subject": "Test1",
-    "body": "Test1",
-    "thresholdTimes": {
-      "start": "13:00",
-      "success": "15:00",
-      "low": null,
-      "high": null,
-      "critical": "16:30"
-    },
-    "indicatorTitle": "Test1",
-    "indicatorDescription": "Test1 indicatorDescription"
   },
   {
     "from": "facugon@theeye.io",
