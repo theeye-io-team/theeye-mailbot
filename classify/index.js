@@ -25,10 +25,6 @@ const main = module.exports = async () => {
     runtimeDate: buildRuntimeDate(config),
   })
 
-  handleStatusIndicator(classificationCache)
-
-  process.exit()
-
   const runtimeDate = DateTime.fromISO( new Date(classificationCache.data.runtimeDate).toISOString() )
   console.log(`runtime date is set to ${runtimeDate}`)
 
@@ -154,6 +150,7 @@ const main = module.exports = async () => {
   await handleProgressIndicator(progress*100/filters.length, timezone, generalSeverity, generalState)
   await handleSummaryIndicator(classificationCache, `Resumen ${DateTime.fromJSDate(new Date(classificationCache.data['runtimeDate'])).toFormat('dd-MM-yyyy')}`, false)
   await handleSummaryIndicator(classificationCache, 'Process Detail', true)
+  await handleStatusIndicator(classificationCache, 'Estado')
 
   await mailBot.closeConnection()
 }
@@ -489,7 +486,7 @@ const handleSummaryIndicator = (classificationData, title, onlyFailure) => {
 
 }
 
-const handleStatusIndicator = (classificationData) => {
+const handleStatusIndicator = (classificationData, title) => {
   let firstRowColor = 'black'
   let tableBaseTextColor = 'white'
   let elements = 1
@@ -511,7 +508,6 @@ const handleStatusIndicator = (classificationData) => {
           <th style="background-color:${firstRowColor}">High</th>
           <th style="background-color:${firstRowColor}">Critical</th>
           <th style="background-color:${firstRowColor}">Solved</th>
-          <th style="background-color:${firstRowColor}">Result</th>
         </tr>
       </thead>
       <tbody>
@@ -569,12 +565,9 @@ const handleStatusIndicator = (classificationData) => {
 
   for(let i = pastFilters.length-1; i >= 0; i--) {
     const totalLength = pastFilters.length-1
-    console.log(i, totalLength)
-
     if(i === totalLength) {
       dataIndexes.pastFilters.push(pastFilters[i].index)
     } else {
-      console.log(pastFilters[i+1].start, pastFilters[i].start)
       if(pastFilters[i+1].start === pastFilters[i].start) {
         dataIndexes.pastFilters.push(pastFilters[i].index)
       }
@@ -582,7 +575,6 @@ const handleStatusIndicator = (classificationData) => {
   }
 
   for(let i = 0; i <= futureFilters.length-1; i++) {
-
     if(i === 0) {
       dataIndexes.futureFilters.push(futureFilters[i].index)
     } else {
@@ -594,44 +586,52 @@ const handleStatusIndicator = (classificationData) => {
   }
 
   for(const eachFilter of currentFilters) {
-    
+    dataIndexes.currentFilters.push(eachFilter.index)
   }
-  dataIndexes.currentFilters
 
   console.log(dataIndexes)
 
-  process.exit()
-
-  if(elements % 2) {
-    rowColor = '#313131'
+  const addRow = (filterData, status) => {
+    if(elements % 2) {
+      rowColor = '#313131'
+    }
+   
+    let filterValue = `
+      <tr>
+        <td style="background-color:${rowColor}">${status}</td>
+        <td style="background-color:${rowColor}">${filterData.indicatorTitle}</td>
+        <td style="background-color:${rowColor}">${filterData.indicatorDescription || ''}</td>
+        <td style="background-color:${rowColor}">${filterData.from}</td>
+        <td style="background-color:${rowColor}">${filterData.subject}</td>
+        <td style="background-color:${rowColor}">${filterData.body}</td>
+        <td style="background-color:${rowColor}">${filterData.start}</td>
+        <td style="background-color:${rowColor}">${filterData.low}</td>
+        <td style="background-color:${rowColor}">${filterData.high}</td>
+        <td style="background-color:${rowColor}">${filterData.critical}</td>
+        <td style="background-color:${rowColor}">${filterData.solved}</td>
+      </tr>
+      `      
+      elements++
+      return filterValue
   }
- 
-  let filterValue = `
-    <tr>
-      <td style="background-color:${rowColor}">${filterData.indicatorTitle}</td>
-      <td style="background-color:${rowColor}">${filterData.indicatorDescription || ''}</td>
-      <td style="background-color:${rowColor}">${filterData.from}</td>
-      <td style="background-color:${rowColor}">${filterData.subject}</td>
-      <td style="background-color:${rowColor}">${filterData.body}</td>
-      <td style="background-color:${rowColor}">${filterData.start}</td>
-      <td style="background-color:${rowColor}">${filterData.low}</td>
-      <td style="background-color:${rowColor}">${filterData.high}</td>
-      <td style="background-color:${rowColor}">${filterData.critical}</td>
-      <td style="background-color:${rowColor}">${filterData.solved}</td>
-      <td style="background-color:${rowColor};color:${resultStyle}"><b>${resultData}<b></td>
-    </tr>
-    `      
-    elements++
-    value = value + filterValue
+
+  for (const eachIndex of dataIndexes.pastFilters) {
+    value = value + addRow(classificationData.data[eachIndex].data, 'Anterior')
+  }
+
+  for (const eachIndex of dataIndexes.currentFilters) {
+    value = value + addRow(classificationData.data[eachIndex].data, 'Actual')
+  }
+
+  for (const eachIndex of dataIndexes.futureFilters) {
+    value = value + addRow(classificationData.data[eachIndex].data, 'Próximo')
+  }
+
 
   value = value + '</tbody> </table>'
 
   const indicator = new TheEyeIndicator(title)
-  if(onlyFailure) {
-    indicator.order = 0
-  } else {
-    indicator.order = 1
-  }
+  indicator.order = 2
   indicator.accessToken = config.api.accessToken
   indicator.value = value
   indicator.state = ''
