@@ -508,6 +508,7 @@ const handleStatusIndicator = (classificationData, title) => {
           <th style="background-color:${firstRowColor}">High</th>
           <th style="background-color:${firstRowColor}">Critical</th>
           <th style="background-color:${firstRowColor}">Solved</th>
+          <th style="background-color:${firstRowColor}">Result</th>
         </tr>
       </thead>
       <tbody>
@@ -585,6 +586,37 @@ const handleStatusIndicator = (classificationData, title) => {
   }
 
   const addRow = (filterData, status) => {
+    let resultStyle = 'white'
+      let resultData = 'Waiting'
+
+      if(filterData.result.severity === 'critical' && filterData.result.state === 'failure') {
+        resultStyle = 'red'
+        if(filterData.solved) {
+          resultData = 'Late'
+        }
+      }
+
+      if(filterData.result.severity === 'high' && filterData.result.state === 'failure') {
+        resultStyle = 'orange'
+        if(filterData.solved) {
+          resultData = 'Late'
+        }
+      }
+
+      if(filterData.result.severity === 'low' && filterData.result.state === 'failure') {
+        resultStyle = 'yellow'
+        if(filterData.solved) {
+          resultData = 'Late'
+        }
+      }
+
+      if(filterData.result.state === 'normal') {
+        resultStyle = 'green'
+        if(filterData.solved) {
+          resultData = 'On Time'
+        }
+      }
+
     if(elements % 2) {
       rowColor = '#313131'
     }
@@ -602,6 +634,7 @@ const handleStatusIndicator = (classificationData, title) => {
         <td style="background-color:${rowColor}">${filterData.high}</td>
         <td style="background-color:${rowColor}">${filterData.critical}</td>
         <td style="background-color:${rowColor}">${filterData.solved}</td>
+        <td style="background-color:${rowColor};color:${resultStyle}"><b>${resultData}<b></td>
       </tr>
       `      
       elements++
