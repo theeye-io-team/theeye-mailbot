@@ -70,7 +70,6 @@ const main = module.exports = async () => {
       })
     )
 
-    console.log(`${messages.length} messages found with search criteria`)
 
     let found = false
 
@@ -153,6 +152,8 @@ const main = module.exports = async () => {
   await handleStatusIndicator(classificationCache, 'Estado')
 
   await mailBot.closeConnection()
+
+  return true
 }
 
 /**
@@ -164,7 +165,6 @@ const main = module.exports = async () => {
  */
 
 const sendAlert = async (filter, state, severity) => {
-  console.log(filter)
   if(state === 'failure') {
     const subject = `Alerta de Retraso ${severity} correo ${filter.data.indicatorTitle}`
     const body = `
@@ -181,7 +181,7 @@ const sendAlert = async (filter, state, severity) => {
         <li><b>Critical: </b>${filter.data.critical}</li>
       </ul>
     `
-    const recipients = `${config.acls.manager}`
+    const recipients = config.acls.manager.concat(config.acls.operator)
     const alert = new TheEyeAlert(config.api.alert.task, config.api.alert.secret, subject, body, recipients)
     await alert.post()
     return true
@@ -553,10 +553,6 @@ const handleStatusIndicator = (classificationData, title) => {
   const pastFilters = allPastFilters.filter((elem) => elem.solved)
   const currentFilters = allPastFilters.filter((elem) => !elem.solved)
 
-  console.log(futureFilters)
-  console.log(pastFilters)
-  console.log(currentFilters)
-
   let dataIndexes = {
     pastFilters:[],
     currentFilters:[],
@@ -578,7 +574,6 @@ const handleStatusIndicator = (classificationData, title) => {
     if(i === 0) {
       dataIndexes.futureFilters.push(futureFilters[i].index)
     } else {
-      console.log(futureFilters[i-1].start, futureFilters[i].start)
       if(futureFilters[i-1].start === futureFilters[i].start) {
         dataIndexes.futureFilters.push(futureFilters[i].index)
       }
@@ -588,8 +583,6 @@ const handleStatusIndicator = (classificationData, title) => {
   for(const eachFilter of currentFilters) {
     dataIndexes.currentFilters.push(eachFilter.index)
   }
-
-  console.log(dataIndexes)
 
   const addRow = (filterData, status) => {
     if(elements % 2) {
