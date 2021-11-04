@@ -1,56 +1,82 @@
 [
-  {
-    "from": "facugon@theeye.io",
+  { 
+    "order": 0,
+    "from": "blyatzkrieg@gmail.com",
     "subject": "Prueba Corrimiento",
-    "body": "Llegada -3 horas",
-    "ignoreMessageTimezone": true,
+    "body": "Llegada",
     "thresholdTimes": {
-      "start": "16:00",
-      "success": "16:30",
-      "low": "16:40",
-      "high": "16:50",
-      "critical": "17:00"
+      "start": "09:00",
+      "low": "",
+      "high": "09:58",
+      "critical": "09:59"
     },
     "indicatorTitle": "Prueba Corrimiento"
   },
   {
-    "from": "facugon@theeye.io",
+    "order": 1,
+    "from": "blyatzkrieg@gmail.com",
+    "subject": "Prueba",
+    "body": "Temprano",
+    "thresholdTimes": {
+      "start": "07:10",
+      "low": "11:20",
+      "high": "11:25",
+      "critical": "11:26"
+    },
+    "indicatorTitle": "Prueba Temprano"
+  },
+  {
+    "order": 2,
+    "from": "blyatzkrieg@gmail.com",
+    "subject": "Test1",
+    "body": "Test1",
+    "thresholdTimes": {
+      "start": "10:00",
+      "low": "10:20",
+      "high": "",
+      "critical": "10:21"
+    },
+    "indicatorTitle": "Test1",
+    "indicatorDescription": "Test1 indicatorDescription"
+  },
+  {
+    "order": 3,
+    "from": "blyatzkrieg@gmail.com",
     "subject": "Test2",
     "body": "Test2",
     "thresholdTimes": {
       "start": "15:00",
-      "success": "17:10",
-      "low": null,
-      "high": null,
-      "critical": "19:00"
+      "low": "17:10",
+      "high": "17:20",
+      "critical": "17:30"
     },
     "indicatorTitle": "Test2",
     "indicatorDescription": "Test2 indicatorDescription"
   },
   {
-    "from": "facugon@theeye.io",
+    "order": 4,
+    "from": "blyatzkrieg@gmail.com",
     "subject": "Test3",
     "body": "Test3",
     "thresholdTimes": {
-      "start": "19:00",
-      "success": "23:00",
-      "low": null,
-      "high": null,
-      "critical": "01:00"
+      "start": "15:00",
+      "low": "16:03",
+      "high": "16:29",
+      "critical": "16:30"
     },
     "indicatorTitle": "Test3",
     "indicatorDescription": "Test3 indicatorDescription"
   },
   {
-    "from": "facugon@theeye.io",
-    "subject": "Test 4",
-    "body": "Un mensaje bastante largo",
+    "order": 5,
+    "from": "blyatzkrieg@gmail.com",
+    "subject": "Test4",
+    "body": "Test4",
     "thresholdTimes": {
-      "start": "13:00",
-      "success": "19:50",
-      "low": null,
-      "high": null,
-      "critical": null
+      "start": "09:00",
+      "low": "09:20",
+      "high": "09:30",
+      "critical": "09:40"
     },
     "indicatorTitle": "Test4",
     "indicatorDescription": "Test4 indicatorDescription"

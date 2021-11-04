@@ -10,7 +10,7 @@ class ClassificationCache extends Cache {
   }
 
   alreadyProcessed (hash) {
-    return this.data[hash] === true
+    return this.data[hash].processed === true
   }
 
   setProcessed (hash) {
@@ -32,6 +32,36 @@ class ClassificationCache extends Cache {
       this.save(this.data)
     }
 
+    return this
+  }
+
+  setBaseFilterData(filterHash, filterData) {
+    if(!this.data[filterHash]) {
+      this.data[filterHash] = filterData
+      this.save(this.data)
+      return this
+    }
+  }
+
+  updateIndicatorData (filterHash, filterData) {
+
+    if(filterData.solved) {
+      this.data[filterHash].data.solved = filterData.solved
+    }
+
+    if(filterData.result) {
+      this.data[filterHash].data.result = filterData.result
+    }
+
+    if(filterData.processed) {
+      this.data[filterHash].processed = filterData.processed
+    }
+
+    if(filterData.alert) {
+      this.data[filterHash].alert[filterData.alert.severity] = filterData.alert.alert
+    }
+
+    this.save(this.data)
     return this
   }
 }

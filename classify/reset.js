@@ -6,10 +6,10 @@ const config = require('../lib/config').decrypt()
 
 const main = module.exports = async () => {
   const cache = new Cache({ cacheId: 'classification' })
-  cache.drop()
+  cache.move(cache.cacheId)
 
-  const senderCache = new Cache({ cacheId: 'sender' })
-  senderCache.drop()
+  // const senderCache = new Cache({ cacheId: 'sender' })
+  // senderCache.drop()
 
   TheEyeIndicator.accessToken = config.api.accessToken
   const resp = await TheEyeIndicator.Fetch() 
