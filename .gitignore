@@ -1,0 +1,13 @@
+node_modules
+*.swp
+*.swo
+attachments
+
+config/mbsync.conf
+config/config.json
+config/*.json
+config/*.conf
+cache
+
+mailbot
+.env

@@ -1,0 +1,49 @@
+{
+  "startOfDay": "00:00",
+  "imap": {
+    "user": "",
+    "password": "",
+    "host": "",
+    "port": 993,
+    "tls": true,
+    "authTimeout": 6000
+  },
+  "folders": {
+    "INBOX": "AP",
+    "processed": "adjuntosDescargados",
+    "notProcessed": "adjuntosNoProcesados"
+  },    
+  "attachments": {
+    "allowed": {
+      "dispositions": ["inline", "attachment"],
+      "extensions": ["pdf", "tiff", "tif"],
+      "mime": ["pdf", "tiff", "tif", "octet-stream"]
+    },
+    "downloadsDirectory": "g:"
+  },    
+  "searchCriteria": ["ALL"],
+  "api": {
+    "protocol": "https",
+    "hostname": "",
+    "port": 443,
+    "accessToken": ""
+  },
+  "sender": {
+    "transport": {
+      "from": "NO REPLY <support@theeye.io>",
+      "transport": {
+        "host": "smtp.gmail.com",
+        "port": 587,
+        "auth": {
+          "user": "",
+          "pass": ""
+        },
+        "secureConnection": false,
+        "tls": {
+          "ciphers": "SSLv3"
+        },
+        "requireTLS": true
+      }
+    }
+  }
+}
