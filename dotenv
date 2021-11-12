@@ -1,3 +1,8 @@
 
+THEEYE_ORGANIZATION_NAME='"customer"'
+
+THEEYE_API_URL='"https://supervisor.theeye.io"'
+
 CONFIG_FILE_PATH="./config/config.json"
+
 CLASSIFICATION_RULEZ_PATH="./config/classificationRulez.json"
