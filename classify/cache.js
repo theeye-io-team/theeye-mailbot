@@ -13,13 +13,6 @@ class ClassificationCache extends Cache {
     return this.data[hash].processed === true
   }
 
-  setProcessed (hash) {
-    console.log(`flagging processed hash ${hash}`)
-    this.data[hash] = true
-    this.save(this.data)
-    return this
-  }
-
   createHash (string) {
     const hash = crypto.createHash('sha1')
     hash.update(string)
@@ -31,36 +24,11 @@ class ClassificationCache extends Cache {
       this.data.runtimeDate = (date || new Date())
       this.save(this.data)
     }
-
     return this
   }
 
-  setBaseFilterData(filterHash, filterData) {
-    if(!this.data[filterHash]) {
-      this.data[filterHash] = filterData
-      this.save(this.data)
-      return this
-    }
-  }
-
-  updateIndicatorData (filterHash, filterData) {
-
-    if(filterData.solved) {
-      this.data[filterHash].data.solved = filterData.solved
-    }
-
-    if(filterData.result) {
-      this.data[filterHash].data.result = filterData.result
-    }
-
-    if(filterData.processed) {
-      this.data[filterHash].processed = filterData.processed
-    }
-
-    if(filterData.alert) {
-      this.data[filterHash].alert[filterData.alert.severity] = filterData.alert.alert
-    }
-
+  setHashData(hash, data) {
+    this.data[hash] = data
     this.save(this.data)
     return this
   }

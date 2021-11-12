@@ -9,7 +9,7 @@ const { DateTime } = require('luxon')
 
 const Helpers = require('../lib/helpers')
 const MailBot = require('../lib/mailbot')
-const indicatorHandler = require('../lib/indicatorHandler')
+const indicatorHandler = require('./indicatorHandler')
 const TheEyeAlert = require('../lib/alert')
 const ClassificationCache = require('./cache')
 const config = require('../lib/config').decrypt()
@@ -24,7 +24,9 @@ const main = module.exports = async () => {
     runtimeDate: buildRuntimeDate(config)
   })
 
-  const runtimeDate = DateTime.fromISO(new Date(classificationCache.data.runtimeDate).toISOString())
+  let cacheData = classificationCache.data
+
+  const runtimeDate = DateTime.fromISO(new Date(cacheData.runtimeDate).toISOString())
   console.log(`runtime date is set to ${runtimeDate}`)
 
   const mailBot = new MailBot(config)
@@ -35,8 +37,11 @@ const main = module.exports = async () => {
 
   for (const filter of filters) {
     const filterHash = classificationCache.createHash(JSON.stringify(filter))
-    classificationCache.setBaseFilterData(filterHash, filterData(filter))
 
+    if(!cacheData[filterHash]) {
+      classificationCache.setHashData(filterHash, filterData(filter))
+    }
+    
     if (classificationCache.alreadyProcessed(filterHash) === true) {
       progress++
       console.log('Skip this rule. Already checked.')
@@ -89,17 +94,13 @@ const main = module.exports = async () => {
 
           const { state, severity } = indicatorState(mailDate, lowFilterDate, highFilterDate, criticalFilterDate)
 
-          const filterPayload = {
-            solved: mailDate.toFormat('HH:mm'),
-            result: {
-              state: state,
-              severity: severity
-            },
-            processed: true
-          }
+          cacheData[filterHash].data.solved = mailDate.toFormat('HH:mm')
+          cacheData[filterHash].data.result.state = state
+          cacheData[filterHash].data.result.severity = severity
+          cacheData[filterHash].processed = true
 
           await message.move()
-          classificationCache.updateIndicatorData(filterHash, filterPayload)
+          classificationCache.setHashData(filterHash, cacheData[filterHash])
         } else {
           console.log('Old message')
         }
@@ -108,21 +109,17 @@ const main = module.exports = async () => {
 
     if (!found) {
       const { state, severity } = indicatorState(currentDate, lowFilterDate, highFilterDate, criticalFilterDate)
-      let alert = false
+      let sentAlert = cacheData[filterHash].alert[severity]
 
-      if (!classificationCache.data[filterHash].alert[severity]) {
-        alert = await sendAlert(classificationCache.data[filterHash], state, severity)
+      if (!sentAlert) {
+        sentAlert = await sendAlert(cacheData[filterHash], state, severity)
+        cacheData[filterHash].alert[severity] = sentAlert
       }
 
-      const filterPayload = {
-        result: { state, severity },
-        alert: {
-          severity: severity,
-          alert: alert
-        }
-      }
+      cacheData[filterHash].data.result.state = state
+      cacheData[filterHash].data.result.severity = severity
 
-      classificationCache.updateIndicatorData(filterHash, filterPayload)
+      classificationCache.setHashData(filterHash, cacheData[filterHash])
 
       if (!generalState && !generalSeverity) {
         generalState = state
@@ -140,7 +137,7 @@ const main = module.exports = async () => {
   }
 
   await indicatorHandler.handleProgressIndicator(progress * 100 / filters.length, timezone, generalSeverity, generalState)
-  await indicatorHandler.handleSummaryIndicator(classificationCache, `Resumen ${DateTime.fromJSDate(new Date(classificationCache.data.runtimeDate)).toFormat('dd-MM-yyyy')}`, false)
+  await indicatorHandler.handleSummaryIndicator(classificationCache, `Resumen ${DateTime.fromJSDate(new Date(cacheData.runtimeDate)).toFormat('dd-MM-yyyy')}`, false)
   await indicatorHandler.handleSummaryIndicator(classificationCache, 'Process Detail', true)
   await indicatorHandler.handleStatusIndicator(classificationCache, 'Estado')
 
@@ -219,7 +216,10 @@ const filterData = (filter) => {
       high: filter.thresholdTimes.high,
       critical: filter.thresholdTimes.critical,
       solved: '',
-      result: ''
+      result: {
+        state:'',
+        severity:''
+      }
     },
     processed: false,
     alert: {
