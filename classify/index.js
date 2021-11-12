@@ -136,10 +136,12 @@ const main = module.exports = async () => {
     }
   }
 
-  await indicatorHandler.handleProgressIndicator(progress * 100 / filters.length, timezone, generalSeverity, generalState)
-  await indicatorHandler.handleSummaryIndicator(classificationCache, `Resumen ${DateTime.fromJSDate(new Date(cacheData.runtimeDate)).toFormat('dd-MM-yyyy')}`, false)
-  await indicatorHandler.handleSummaryIndicator(classificationCache, 'Process Detail', true)
-  await indicatorHandler.handleStatusIndicator(classificationCache, 'Estado')
+  const MOA_ACL = `${config.acls.manager},${config.acls.operator},${config.acls.administrator}`.split(',')
+
+  await indicatorHandler.handleProgressIndicator(progress * 100 / filters.length, timezone, generalSeverity, generalState, MOA_ACL)
+  await indicatorHandler.handleSummaryIndicator(classificationCache, `Resumen ${DateTime.fromJSDate(new Date(cacheData.runtimeDate)).toFormat('dd-MM-yyyy')}`, false, config.acls.administrator)
+  await indicatorHandler.handleSummaryIndicator(classificationCache, 'Process Detail', true, MOA_ACL)
+  await indicatorHandler.handleStatusIndicator(classificationCache, 'Estado', config.acls.administrator)
 
   await mailBot.closeConnection()
 

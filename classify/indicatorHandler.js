@@ -17,7 +17,7 @@ const resultNormal = '#50d841'
 const resultStandby = '#ffffff'
 
 module.exports = {
-  handleProgressIndicator (progress, timezone, severity, state) {
+  handleProgressIndicator (progress, timezone, severity, state, acl) {
     const indicator = new TheEyeIndicator(config.classify?.progress_title || 'Progress')
     indicator.order = 0
     indicator.accessToken = config.api.accessToken
@@ -25,11 +25,12 @@ module.exports = {
     indicator.state = state
     indicator.severity = severity
     indicator.type = 'progress'
+    indicator.acl = acl
 
     return indicator.put()
   },
 
-  handleSummaryIndicator (classificationData, title, onlyFailure) {
+  handleSummaryIndicator (classificationData, title, onlyFailure, acl) {
     let elements = 1
 
     let value = `
@@ -103,11 +104,12 @@ module.exports = {
     indicator.value = value
     indicator.state = ''
     indicator.severity = 'low'
+    indicator.acl = acl
 
     return indicator.put()
   },
 
-  handleStatusIndicator (classificationData, title) {
+  handleStatusIndicator (classificationData, title, acl) {
     let elements = 1
     const tempData = []
 
@@ -248,32 +250,33 @@ module.exports = {
     indicator.value = value
     indicator.state = ''
     indicator.severity = 'low'
-
-    return indicator.put()
-  },
-
-  handleIndicator ({ order, state, date, label, filter, minDate, maxDate }) {
-    const time = date.toFormat('HH:mm')
-
-    const value = `
-      <table class="table">
-        <tr><th>From</th><td>${filter.from}</td></tr>
-        <tr><th>Subject</th><td>${filter.subject}</td></tr>
-        <tr><th>Body</th><td>${filter.body}</td></tr>
-        <tr><th>Start</th><td>${minDate.toRFC2822()}</td></tr>
-        <tr><th>End</th><td>${maxDate.toRFC2822()}</td></tr>
-        <tr><th><b>Result</b></th><td><b>${time} - ${label}</b></td></tr>
-      </table>
-      `
-
-    const indicator = new TheEyeIndicator(filter.indicatorTitle || filter.subject)
-    indicator.order = order
-    indicator.accessToken = config.api.accessToken
-    indicator.value = value
-    indicator.state = state
+    indicator.acl = acl
 
     return indicator.put()
   }
+
+  // handleIndicator ({ order, state, date, label, filter, minDate, maxDate }) {
+  //   const time = date.toFormat('HH:mm')
+
+  //   const value = `
+  //     <table class="table">
+  //       <tr><th>From</th><td>${filter.from}</td></tr>
+  //       <tr><th>Subject</th><td>${filter.subject}</td></tr>
+  //       <tr><th>Body</th><td>${filter.body}</td></tr>
+  //       <tr><th>Start</th><td>${minDate.toRFC2822()}</td></tr>
+  //       <tr><th>End</th><td>${maxDate.toRFC2822()}</td></tr>
+  //       <tr><th><b>Result</b></th><td><b>${time} - ${label}</b></td></tr>
+  //     </table>
+  //     `
+
+  //   const indicator = new TheEyeIndicator(filter.indicatorTitle || filter.subject)
+  //   indicator.order = order
+  //   indicator.accessToken = config.api.accessToken
+  //   indicator.value = value
+  //   indicator.state = state
+
+  //   return indicator.put()
+  // }
 }
 
 const applyResultStyles = (filterData) => {
