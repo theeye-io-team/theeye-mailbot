@@ -1,4 +1,5 @@
 require('dotenv').config()
+const crypto = require('crypto')
 
 const CACHE_NAME = 'sender'
 const { DateTime } = require('luxon')
@@ -18,6 +19,7 @@ const main = module.exports = async () => {
   const currentDate = DateTime.now().setZone(timezone)
 
   for (const filter of filters) {
+    const hash = JSON.stringify(filter)
     const thresholds = filter.thresholdTimes
     const startDate = DateTime.fromISO(
       Helpers.timeExpressionToDate(thresholds.start, timezone).toISOString()
@@ -44,10 +46,16 @@ const main = module.exports = async () => {
       html: filter.body
     })
 
-    cacheData[thresholds.start] = true
+    cacheData[hash] = true
   }
 
   cache.save(cacheData)
+}
+
+const createHash = (string) => {
+  const hash = crypto.createHash('sha1')
+  hash.update(string)
+  return hash.digest('hex')
 }
 
 if (require.main === module) {
