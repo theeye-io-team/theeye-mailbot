@@ -1,5 +1,5 @@
-const config = require('theeye-mailbot/lib/config').decrypt()
-const ClassificationCache = require('theeye-mailbot/classify/cache')
+const config = require('../lib/config').decrypt()
+const ClassificationCache = require('./cache')
 const DEFAULT_CACHE_NAME = "classification"
 
 const main = module.exports = async (runtime) => {

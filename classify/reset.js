@@ -8,9 +8,6 @@ const main = module.exports = async () => {
   const cache = new Cache({ cacheId: 'classification' })
   cache.move(cache.cacheId)
 
-  // const senderCache = new Cache({ cacheId: 'sender' })
-  // senderCache.drop()
-
   TheEyeIndicator.accessToken = config.api.accessToken
   const resp = await TheEyeIndicator.Fetch() 
   const indicators = JSON.parse(resp.body)

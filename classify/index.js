@@ -1,9 +1,9 @@
 require('dotenv').config()
 
 // default values
-const DEFAULT_CACHE_NAME = "classification"
+const DEFAULT_CACHE_NAME = 'classification'
 
-//const tz = 'America/Argentina/Buenos_Aires'
+// const tz = 'America/Argentina/Buenos_Aires'
 
 const { DateTime } = require('luxon')
 
@@ -16,23 +16,22 @@ const config = require('../lib/config').decrypt()
 const filters = require('../filters')
 
 const main = module.exports = async () => {
-
   const { timezone } = config
   let generalState, generalSeverity
 
   const classificationCache = new ClassificationCache({
     cacheId: (config.cacheName || DEFAULT_CACHE_NAME),
-    runtimeDate: buildRuntimeDate(config),
+    runtimeDate: buildRuntimeDate(config)
   })
 
-  const runtimeDate = DateTime.fromISO( new Date(classificationCache.data.runtimeDate).toISOString() )
+  const runtimeDate = DateTime.fromISO(new Date(classificationCache.data.runtimeDate).toISOString())
   console.log(`runtime date is set to ${runtimeDate}`)
 
   const mailBot = new MailBot(config)
   await mailBot.connect()
   const currentDate = DateTime.now().setZone(timezone)
 
-  let index = 0, progress = 0
+  let progress = 0
 
   for (const filter of filters) {
     const filterHash = classificationCache.createHash(JSON.stringify(filter))
@@ -70,7 +69,6 @@ const main = module.exports = async () => {
       })
     )
 
-
     let found = false
 
     if (messages.length > 0) {
@@ -89,38 +87,35 @@ const main = module.exports = async () => {
         if (mailDate > runtimeDate) {
           found = true
 
-          const {state, severity} = indicatorState(mailDate, lowFilterDate, highFilterDate, criticalFilterDate)
-          
+          const { state, severity } = indicatorState(mailDate, lowFilterDate, highFilterDate, criticalFilterDate)
+
           const filterPayload = {
-            solved:mailDate.toFormat('HH:mm'),
+            solved: mailDate.toFormat('HH:mm'),
             result: {
-              state:state,
-              severity:severity
+              state: state,
+              severity: severity
             },
-            processed:true
+            processed: true
           }
 
           await message.move()
           classificationCache.updateIndicatorData(filterHash, filterPayload)
         } else {
-          console.log(`Old message`)
+          console.log('Old message')
         }
       }
     }
 
     if (!found) {
-      const {state, severity} = indicatorState(currentDate, lowFilterDate, highFilterDate, criticalFilterDate)
+      const { state, severity } = indicatorState(currentDate, lowFilterDate, highFilterDate, criticalFilterDate)
       let alert = false
 
-      if(!classificationCache.data[filterHash].alert[severity]) {
+      if (!classificationCache.data[filterHash].alert[severity]) {
         alert = await sendAlert(classificationCache.data[filterHash], state, severity)
       }
 
       const filterPayload = {
-        result: {
-          state:state,
-          severity:severity
-        },
+        result: { state, severity },
         alert: {
           severity: severity,
           alert: alert
@@ -129,25 +124,23 @@ const main = module.exports = async () => {
 
       classificationCache.updateIndicatorData(filterHash, filterPayload)
 
-      if(!generalState && !generalSeverity) {
+      if (!generalState && !generalSeverity) {
         generalState = state
         generalSeverity = severity
       }
 
-      if(state === 'failure') {
+      if (state === 'failure') {
         generalState = state
       }
 
-      if(transformSeverity(generalSeverity)<transformSeverity(severity)) {
+      if (transformSeverity(generalSeverity) < transformSeverity(severity)) {
         generalSeverity = severity
       }
     }
-
-    index++
   }
 
-  await indicatorHandler.handleProgressIndicator(progress*100/filters.length, timezone, generalSeverity, generalState)
-  await indicatorHandler.handleSummaryIndicator(classificationCache, `Resumen ${DateTime.fromJSDate(new Date(classificationCache.data['runtimeDate'])).toFormat('dd-MM-yyyy')}`, false)
+  await indicatorHandler.handleProgressIndicator(progress * 100 / filters.length, timezone, generalSeverity, generalState)
+  await indicatorHandler.handleSummaryIndicator(classificationCache, `Resumen ${DateTime.fromJSDate(new Date(classificationCache.data.runtimeDate)).toFormat('dd-MM-yyyy')}`, false)
   await indicatorHandler.handleSummaryIndicator(classificationCache, 'Process Detail', true)
   await indicatorHandler.handleStatusIndicator(classificationCache, 'Estado')
 
@@ -157,15 +150,15 @@ const main = module.exports = async () => {
 }
 
 /**
- * 
- * @param {Object} filter 
- * @param {String} state 
- * @param {String} severity 
+ *
+ * @param {Object} filter
+ * @param {String} state
+ * @param {String} severity
  * @returns {Boolean}
  */
 
 const sendAlert = async (filter, state, severity) => {
-  if(state === 'failure') {
+  if (state === 'failure') {
     const subject = `Alerta de Retraso ${severity} correo ${filter.data.indicatorTitle}`
     const body = `
       <p>Estimado,</p> 
@@ -185,18 +178,18 @@ const sendAlert = async (filter, state, severity) => {
     const alert = new TheEyeAlert(config.api.alert.task, config.api.alert.secret, subject, body, recipients)
     await alert.post()
     return true
-  } 
+  }
 
-  if(state === 'failure' && filter.alert) {
+  if (state === 'failure' && filter.alert) {
     return true
   }
-  
+
   return false
 }
 
 /**
- * 
- * @param {String} severity 
+ *
+ * @param {String} severity
  * @returns {Number} severity
  */
 const transformSeverity = (severity) => {
@@ -208,87 +201,83 @@ const transformSeverity = (severity) => {
 }
 
 /**
- * 
- * @param {Object} filter 
+ *
+ * @param {Object} filter
  * @returns {Object} {dataPayload}
  */
 
 const filterData = (filter) => {
   return {
-      data: {
-        indicatorTitle:filter.indicatorTitle,
-        indicatorDescription:filter.indicatorDescription,
-        from:filter.from,
-        subject:filter.subject,
-        body:filter.body,
-        start:filter.thresholdTimes.start,
-        low:filter.thresholdTimes.low,
-        high:filter.thresholdTimes.high,
-        critical:filter.thresholdTimes.critical,
-        solved:'',
-        result:''
-      },
-      processed: false,
-      alert:{
-        low:false,
-        high:false,
-        critical:false
-      }
+    data: {
+      indicatorTitle: filter.indicatorTitle,
+      indicatorDescription: filter.indicatorDescription,
+      from: filter.from,
+      subject: filter.subject,
+      body: filter.body,
+      start: filter.thresholdTimes.start,
+      low: filter.thresholdTimes.low,
+      high: filter.thresholdTimes.high,
+      critical: filter.thresholdTimes.critical,
+      solved: '',
+      result: ''
+    },
+    processed: false,
+    alert: {
+      low: false,
+      high: false,
+      critical: false
+    }
   }
 }
 
-
 /**
- * 
- * @param {DateTime} currentDate 
- * @param {DateTime} lowFilterDate 
- * @param {DateTime} highFilterDate 
- * @param {DateTime} criticalFilterDate 
+ *
+ * @param {DateTime} currentDate
+ * @param {DateTime} lowFilterDate
+ * @param {DateTime} highFilterDate
+ * @param {DateTime} criticalFilterDate
  * @returns {Object} {state, severity}
  */
 const indicatorState = (date, lowFilterDate, highFilterDate, criticalFilterDate) => {
-
   let state, severity
 
-  if(lowFilterDate) {
-    if(date < lowFilterDate) {
+  if (lowFilterDate) {
+    if (date < lowFilterDate) {
       state = 'normal'
       severity = 'low'
     }
 
-    if(date > lowFilterDate) {
+    if (date > lowFilterDate) {
       state = 'failure'
       severity = 'low'
     }
   }
 
-  if(highFilterDate) {
-
-    if(!lowFilterDate && date < highFilterDate) {
+  if (highFilterDate) {
+    if (!lowFilterDate && date < highFilterDate) {
       state = 'normal'
       severity = 'low'
     }
 
-    if(date > highFilterDate) {
+    if (date > highFilterDate) {
       state = 'failure'
       severity = 'high'
     }
   }
 
-  if(criticalFilterDate) {
-
-    if(!lowFilterDate && !highFilterDate && date < criticalFilterDate) {
+  if (criticalFilterDate) {
+    if (!lowFilterDate && !highFilterDate && date < criticalFilterDate) {
       state = 'normal'
       severity = 'low'
     }
 
-    if(date > criticalFilterDate) {
+    if (date > criticalFilterDate) {
       state = 'failure'
       severity = 'critical'
     }
   }
 
-  return {state, severity}
+  return { state, severity }
 }
 
 /**
@@ -314,8 +303,8 @@ const setTimezone = (date, timezone) => {
  * @return {DateTime} luxon
  */
 const ignoreOriginalTimezone = (date, timezone) => {
-  // use toISOString formatter in UTC/Zero timezone and remove the timezone part 
-  const trimmedDate = date.toISOString().replace(/\.[0-9]{3}Z$/,'')
+  // use toISOString formatter in UTC/Zero timezone and remove the timezone part
+  const trimmedDate = date.toISOString().replace(/\.[0-9]{3}Z$/, '')
   // create a new Date and initialize it using the desired timezone
   const tzDate = DateTime.fromISO(trimmedDate, { zone: timezone })
   return tzDate
@@ -329,7 +318,7 @@ const ignoreOriginalTimezone = (date, timezone) => {
 const getFormattedThresholdDate = (time, tz, startingDate) => {
   if (!time) { return null }
 
-  let date = DateTime.fromISO( startingDate.toISO() ).setZone(tz)
+  let date = DateTime.fromISO(startingDate.toISO()).setZone(tz)
   const hours = time.substring(0, 2)
   const minutes = time.substring(3, 5)
 
@@ -359,8 +348,6 @@ const buildRuntimeDate = ({ startOfDay, timezone }) => {
   const isoString = runtimeDate.set({ hours, minutes, seconds: 0 }).toISO()
   return new Date(isoString)
 }
-
-
 
 if (require.main === module) {
   main().then(console.log).catch(console.error)
