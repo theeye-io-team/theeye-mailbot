@@ -1,6 +1,6 @@
 require('dotenv').config()
 
-const CACHE_NAME = "sender"
+const CACHE_NAME = 'sender'
 const { DateTime } = require('luxon')
 const sendmail = require('theeye-bot-sdk/core/mail/sender')
 

@@ -9,10 +9,10 @@ const main = module.exports = async () => {
   cache.rotate()
 
   TheEyeIndicator.accessToken = config.api.accessToken
-  const resp = await TheEyeIndicator.Fetch() 
+  const resp = await TheEyeIndicator.Fetch()
   const indicators = JSON.parse(resp.body)
 
-  for (let data of indicators) {
+  for (const data of indicators) {
     const indicator = new TheEyeIndicator(data.title, data.type)
     indicator.accessToken = TheEyeIndicator.accessToken
     await indicator.remove()

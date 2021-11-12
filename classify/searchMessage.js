@@ -1,7 +1,7 @@
 require('dotenv').config()
 
 // default values
-const DEFAULT_CACHE_NAME = "classification"
+const DEFAULT_CACHE_NAME = 'classification'
 const Helpers = require('../lib/helpers')
 
 const { DateTime } = require('luxon')
@@ -11,7 +11,6 @@ const config = require('../lib/config').decrypt()
 const filters = require('../filters')
 
 const main = module.exports = async (ruleNumber) => {
-
   const mailBot = new MailBot(config)
   await mailBot.connect()
   const currentDate = DateTime.now().setZone(config.timezone)
@@ -23,9 +22,9 @@ const main = module.exports = async (ruleNumber) => {
 
   const messages = await mailBot.searchMessages(filter)
 
-  //console.log(`${messages.length} messages found with search criteria`)
+  // console.log(`${messages.length} messages found with search criteria`)
 
-  for (let message of messages) {
+  for (const message of messages) {
     await message.getContent()
     console.log('==========================')
     console.log('raw data', message.rawData)

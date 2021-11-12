@@ -18,7 +18,6 @@ const resultStandby = '#ffffff'
 
 module.exports = {
   handleProgressIndicator (progress, timezone, severity, state) {
-
     const indicator = new TheEyeIndicator(config.classify?.progress_title || 'Progress')
     indicator.order = 0
     indicator.accessToken = config.api.accessToken

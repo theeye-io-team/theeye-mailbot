@@ -2,7 +2,6 @@ const { DateTime } = require('luxon')
 const MailBot = require('../lib/mailbot-folder')
 const config = require('../lib/config').decrypt()
 
-
 const main = module.exports = async () => {
   const mailBot = new MailBot(config)
 

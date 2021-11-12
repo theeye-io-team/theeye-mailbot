@@ -24,7 +24,7 @@ const main = module.exports = async () => {
     runtimeDate: buildRuntimeDate(config)
   })
 
-  let cacheData = classificationCache.data
+  const cacheData = classificationCache.data
 
   const runtimeDate = DateTime.fromISO(new Date(cacheData.runtimeDate).toISOString())
   console.log(`runtime date is set to ${runtimeDate}`)
@@ -38,10 +38,10 @@ const main = module.exports = async () => {
   for (const filter of filters) {
     const filterHash = classificationCache.createHash(JSON.stringify(filter))
 
-    if(!cacheData[filterHash]) {
+    if (!cacheData[filterHash]) {
       classificationCache.setHashData(filterHash, filterData(filter))
     }
-    
+
     if (classificationCache.alreadyProcessed(filterHash) === true) {
       progress++
       console.log('Skip this rule. Already checked.')
@@ -217,8 +217,8 @@ const filterData = (filter) => {
       critical: filter.thresholdTimes.critical,
       solved: '',
       result: {
-        state:'',
-        severity:''
+        state: '',
+        severity: ''
       }
     },
     processed: false,

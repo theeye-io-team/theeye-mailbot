@@ -27,7 +27,7 @@ class ClassificationCache extends Cache {
     return this
   }
 
-  setHashData(hash, data) {
+  setHashData (hash, data) {
     this.data[hash] = data
     this.save(this.data)
     return this
