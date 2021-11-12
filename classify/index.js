@@ -42,7 +42,7 @@ const main = module.exports = async () => {
       classificationCache.setHashData(filterHash, filterData(filter))
     }
 
-    if (classificationCache.alreadyProcessed(filterHash) === true) {
+    if (classificationCache.isAlreadyProcessed(filterHash) === true) {
       progress++
       console.log('Skip this rule. Already checked.')
       continue

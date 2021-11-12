@@ -9,7 +9,7 @@ class ClassificationCache extends Cache {
     this.setRuntimeDate(options.runtimeDate)
   }
 
-  alreadyProcessed (hash) {
+  isAlreadyProcessed (hash) {
     return this.data[hash].processed === true
   }
 
