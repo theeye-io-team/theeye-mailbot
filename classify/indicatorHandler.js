@@ -18,7 +18,7 @@ const resultStandby = '#ffffff'
 
 module.exports = {
   handleProgressIndicator (progress, timezone, severity, state, acl) {
-    const indicator = new TheEyeIndicator(config.classify?.progress_title || 'Progress')
+    const indicator = new TheEyeIndicator(config.indicator_titles?.progress || 'Progress')
     indicator.order = 0
     indicator.accessToken = config.api.accessToken
     indicator.value = Math.round(progress)
@@ -30,7 +30,7 @@ module.exports = {
     return indicator.put()
   },
 
-  handleSummaryIndicator (classificationData, title, onlyFailure, acl) {
+  handleSummaryIndicator (classificationData, progressDetail, acl) {
     let elements = 1
 
     let value = `
@@ -80,36 +80,38 @@ module.exports = {
           </tr>
           `
 
-        if (onlyFailure && filterData.result.state && filterData.result.state !== 'normal') {
+        if (progressDetail && filterData.result.state && filterData.result.state !== 'normal') {
           elements++
           value = value + filterValue
         }
 
-        if (!onlyFailure) {
+        if (!progressDetail) {
           elements++
           value = value + filterValue
         }
       }
     }
 
-    value = value + '</tbody> </table>'
+    value = (elements <= 1 && progressDetail) ? `<span style="color:${resultNormal}; font-size:26px; font-weigth:bold"; font>Nothing to worry about<span>` : value + '</tbody> </table>'
 
-    const indicator = new TheEyeIndicator(title)
-    if (onlyFailure) {
-      indicator.order = 0
-    } else {
-      indicator.order = 1
-    }
+    const titleDate = `${DateTime.fromJSDate(new Date(classificationData.data.runtimeDate)).toFormat('dd-MM-yyyy')}`
+
+    const indicator = new TheEyeIndicator(progressDetail ? 
+      config.indicator_titles.progress_detail || 'Progress Detail' : 
+      (/%DATE%/gi).test(config.indicator_titles.summary) ? 
+      config.indicator_titles.summary.replace(/%DATE%/gi, titleDate) :
+      `${config.indicator_titles.summary} ${titleDate}`)
+
+    indicator.order = progressDetail ? 1 : 10
     indicator.accessToken = config.api.accessToken
     indicator.value = value
     indicator.state = ''
     indicator.severity = 'low'
-    indicator.acl = acl
-
+    indicator.acl = (elements <= 1 && progressDetail) ? [] : acl
     return indicator.put()
   },
 
-  handleStatusIndicator (classificationData, title, acl) {
+  handleStatusIndicator (classificationData, acl) {
     let elements = 1
     const tempData = []
 
@@ -166,8 +168,8 @@ module.exports = {
       return 0
     })
 
-    const futureFilters = startSort.filter((elem) => DateTime.fromFormat(elem.start, 'HH:mm') > DateTime.now())
-    const allPastFilters = startSort.filter((elem) => DateTime.fromFormat(elem.start, 'HH:mm') <= DateTime.now())
+    const futureFilters = startSort.filter((elem) => DateTime.fromFormat(elem.start, 'HH:mm').setZone(config.timezone) > DateTime.now())
+    const allPastFilters = startSort.filter((elem) => DateTime.fromFormat(elem.start, 'HH:mm').setZone(config.timezone) <= DateTime.now())
     const pastFilters = allPastFilters.filter((elem) => elem.solved)
     const currentFilters = allPastFilters.filter((elem) => !elem.solved)
 
@@ -244,7 +246,7 @@ module.exports = {
 
     value = value + '</tbody> </table>'
 
-    const indicator = new TheEyeIndicator(title)
+    const indicator = new TheEyeIndicator(config.indicator_titles?.status || 'Estado')
     indicator.order = 2
     indicator.accessToken = config.api.accessToken
     indicator.value = value
@@ -255,28 +257,6 @@ module.exports = {
     return indicator.put()
   }
 
-  // handleIndicator ({ order, state, date, label, filter, minDate, maxDate }) {
-  //   const time = date.toFormat('HH:mm')
-
-  //   const value = `
-  //     <table class="table">
-  //       <tr><th>From</th><td>${filter.from}</td></tr>
-  //       <tr><th>Subject</th><td>${filter.subject}</td></tr>
-  //       <tr><th>Body</th><td>${filter.body}</td></tr>
-  //       <tr><th>Start</th><td>${minDate.toRFC2822()}</td></tr>
-  //       <tr><th>End</th><td>${maxDate.toRFC2822()}</td></tr>
-  //       <tr><th><b>Result</b></th><td><b>${time} - ${label}</b></td></tr>
-  //     </table>
-  //     `
-
-  //   const indicator = new TheEyeIndicator(filter.indicatorTitle || filter.subject)
-  //   indicator.order = order
-  //   indicator.accessToken = config.api.accessToken
-  //   indicator.value = value
-  //   indicator.state = state
-
-  //   return indicator.put()
-  // }
 }
 
 const applyResultStyles = (filterData) => {
