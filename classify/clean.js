@@ -8,10 +8,20 @@ const main = module.exports = async () => {
   const resp = await TheEyeIndicator.Fetch()
   const indicators = JSON.parse(resp.body)
 
+  const titles = [
+    config.indicator_titles.progress,
+    config.indicator_titles.status,
+    config.indicator_titles.progress_detail
+  ]
+
   for (const data of indicators) {
-    const indicator = new TheEyeIndicator(data.title, data.type)
-    indicator.accessToken = TheEyeIndicator.accessToken
-    await indicator.remove()
+    for(const title of titles) {
+      if(data.title === title) {
+        const indicator = new TheEyeIndicator(title, data.type)
+        indicator.accessToken = TheEyeIndicator.accessToken
+        await indicator.remove()
+      }
+    }
   }
 }
 
