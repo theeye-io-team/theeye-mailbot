@@ -189,7 +189,7 @@ module.exports = {
       if (i === totalLength) {
         value = value + addRow(classificationData.data[pastFilters[i].index].data, 'Anterior')
       } else {
-        if (pastFilters[i + 1].start === pastFilters[totalLength].start) {
+        if (pastFilters[i].start === pastFilters[totalLength].start) {
           value = value + addRow(classificationData.data[pastFilters[i].index].data, 'Anterior')
         }
       }
@@ -203,7 +203,7 @@ module.exports = {
       if (i === 0) {
         value = value + addRow(classificationData.data[futureFilters[i].index].data, 'Próximo')
       } else {
-        if (futureFilters[i - 1].start === futureFilters[0].start) {
+        if (futureFilters[i].start === futureFilters[0].start) {
           value = value + addRow(classificationData.data[futureFilters[i].index].data, 'Próximo')
         }
       }
