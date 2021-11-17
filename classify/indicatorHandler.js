@@ -1,6 +1,7 @@
 require('dotenv').config()
 
 const { DateTime } = require('luxon')
+const Helpers = require('../lib/helpers')
 const TheEyeIndicator = require('../lib/indicator')
 const config = require('../lib/config').decrypt()
 
@@ -113,7 +114,10 @@ module.exports = {
 
   handleStatusIndicator (classificationData, acl) {
     let elements = 1
-    const tempData = []
+    let runtimeDate
+    const futureFilters = []
+    const pastFilters = []
+    const currentFilters = []
 
     let value = `
       <table class="table" style="color:${tableBaseTextColor}">
@@ -135,74 +139,6 @@ module.exports = {
         </thead>
       <tbody>
       `
-
-    for (const eachFilter of Object.keys(classificationData.data)) {
-      if (!eachFilter.match(/(runtime)/gi)) {
-        const filterData = classificationData.data[eachFilter].data
-
-        tempData.push({ start: filterData.start, low: filterData.low, high: filterData.high, critical: filterData.critical, solved: filterData.solved, index: eachFilter })
-      }
-    }
-
-    const startSort = tempData.sort((elem1, elem2) => {
-      const startOfDay = DateTime.fromFormat(config.startOfDay, 'HH:mm')
-      let date1 = DateTime.fromFormat(elem1.start, 'HH:mm')
-      let date2 = DateTime.fromFormat(elem2.start, 'HH:mm')
-
-      if (date1 < startOfDay) {
-        date1 = date1.plus({ days: 1 })
-      }
-
-      if (date2 < startOfDay) {
-        date2 = date2.plus({ days: 1 })
-      }
-
-      if (date1 < date2) {
-        return -1
-      }
-
-      if (date2 > date1) {
-        return 1
-      }
-
-      return 0
-    })
-
-    const futureFilters = startSort.filter((elem) => DateTime.fromFormat(elem.start, 'HH:mm').setZone(config.timezone) > DateTime.now())
-    const allPastFilters = startSort.filter((elem) => DateTime.fromFormat(elem.start, 'HH:mm').setZone(config.timezone) <= DateTime.now())
-    const pastFilters = allPastFilters.filter((elem) => elem.solved)
-    const currentFilters = allPastFilters.filter((elem) => !elem.solved)
-
-    const dataIndexes = {
-      pastFilters: [],
-      currentFilters: [],
-      futureFilters: []
-    }
-
-    for (let i = pastFilters.length - 1; i >= 0; i--) {
-      const totalLength = pastFilters.length - 1
-      if (i === totalLength) {
-        dataIndexes.pastFilters.push(pastFilters[i].index)
-      } else {
-        if (pastFilters[i + 1].start === pastFilters[i].start) {
-          dataIndexes.pastFilters.push(pastFilters[i].index)
-        }
-      }
-    }
-
-    for (let i = 0; i <= futureFilters.length - 1; i++) {
-      if (i === 0) {
-        dataIndexes.futureFilters.push(futureFilters[i].index)
-      } else {
-        if (futureFilters[i - 1].start === futureFilters[i].start) {
-          dataIndexes.futureFilters.push(futureFilters[i].index)
-        }
-      }
-    }
-
-    for (const eachFilter of currentFilters) {
-      dataIndexes.currentFilters.push(eachFilter.index)
-    }
 
     const addRow = (filterData, status) => {
       let rowColor = innerRowColorDark
@@ -232,16 +168,46 @@ module.exports = {
       return filterValue
     }
 
-    for (const eachIndex of dataIndexes.pastFilters) {
-      value = value + addRow(classificationData.data[eachIndex].data, 'Anterior')
+    for (const eachFilter of Object.keys(classificationData.data)) {
+      if (!eachFilter.match(/(runtime)/gi)) {
+        const filterData = classificationData.data[eachFilter].data
+        const dataToPush = { start: filterData.start, low: filterData.low, high: filterData.high, critical: filterData.critical, solved: filterData.solved, index: eachFilter }
+
+        Helpers.getFormattedThresholdDate(dataToPush.start, config.timezone, runtimeDate, config.startOfDay) > DateTime.now() ? 
+          futureFilters.push(dataToPush) : 
+            filterData.solved ?
+              pastFilters.push(dataToPush) :
+              currentFilters.push(dataToPush)
+
+      } else {
+        runtimeDate = DateTime.fromISO(new Date(classificationData.data[eachFilter]).toISOString())
+      }
     }
 
-    for (const eachIndex of dataIndexes.currentFilters) {
-      value = value + addRow(classificationData.data[eachIndex].data, 'Actual')
+
+    for (let i = pastFilters.length - 1; i >= 0; i--) {
+      const totalLength = pastFilters.length - 1
+      if (i === totalLength) {
+        value = value + addRow(classificationData.data[pastFilters[i].index].data, 'Anterior')
+      } else {
+        if (pastFilters[i + 1].start === pastFilters[i].start) {
+          value = value + addRow(classificationData.data[pastFilters[i].index].data, 'Anterior')
+        }
+      }
     }
 
-    for (const eachIndex of dataIndexes.futureFilters) {
-      value = value + addRow(classificationData.data[eachIndex].data, 'Próximo')
+    for (let i = 0; i <= futureFilters.length - 1; i++) {
+      if (i === 0) {
+        value = value + addRow(classificationData.data[futureFilters[i].index].data, 'Próximo')
+      } else {
+        if (futureFilters[i - 1].start === futureFilters[i].start) {
+          value = value + addRow(classificationData.data[futureFilters[i].index].data, 'Próximo')
+        }
+      }
+    }
+
+    for (const eachFilter of currentFilters) {
+      value = value + addRow(classificationData.data[eachFilter.index].data, 'Actual')
     }
 
     value = value + '</tbody> </table>'

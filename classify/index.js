@@ -53,10 +53,10 @@ const main = module.exports = async () => {
     //
     // @TODO validar. el rango de las reglas de filtrado no pueden contener la hora de inicio del día. rompe la logica
     //
-    const startFilterDate = getFormattedThresholdDate(thresholds.start, timezone, runtimeDate)
-    const lowFilterDate = getFormattedThresholdDate(thresholds.low, timezone, runtimeDate)
-    const highFilterDate = getFormattedThresholdDate(thresholds.high, timezone, runtimeDate)
-    const criticalFilterDate = getFormattedThresholdDate(thresholds.critical, timezone, runtimeDate)
+    const startFilterDate = Helpers.getFormattedThresholdDate(thresholds.start, timezone, runtimeDate, config.startOfDay)
+    const lowFilterDate = Helpers.getFormattedThresholdDate(thresholds.low, timezone, runtimeDate, config.startOfDay)
+    const highFilterDate = Helpers.getFormattedThresholdDate(thresholds.high, timezone, runtimeDate, config.startOfDay)
+    const criticalFilterDate = Helpers.getFormattedThresholdDate(thresholds.critical, timezone, runtimeDate, config.startOfDay)
 
     //
     // ignore rules not inprogress. skip early checks
@@ -310,26 +310,6 @@ const ignoreOriginalTimezone = (date, timezone) => {
   // create a new Date and initialize it using the desired timezone
   const tzDate = DateTime.fromISO(trimmedDate, { zone: timezone })
   return tzDate
-}
-
-/**
- * @param {String} time format 'HH:mm'
- * @param {String} tz timezone string
- * @param {DateTime} startingDate luxon object
- */
-const getFormattedThresholdDate = (time, tz, startingDate) => {
-  if (!time) { return null }
-
-  let date = DateTime.fromISO(startingDate.toISO()).setZone(tz)
-  const hours = time.substring(0, 2)
-  const minutes = time.substring(3, 5)
-
-  // Agregar al config  { ..., "startOfDay" : "14:00", ... }
-  if (time < config.startOfDay) {
-    date = date.plus({ days: 1 })
-  }
-
-  return date.set({ hours, minutes, seconds: 0 })
 }
 
 /**
