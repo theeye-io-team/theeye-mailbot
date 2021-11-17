@@ -184,7 +184,6 @@ module.exports = {
       }
     }
 
-
     for (let i = pastFilters.length - 1; i >= 0; i--) {
       const totalLength = pastFilters.length - 1
       if (i === totalLength) {
@@ -195,6 +194,10 @@ module.exports = {
         }
       }
     }
+    
+    for (const eachFilter of currentFilters) {
+      value = value + addRow(classificationData.data[eachFilter.index].data, 'Actual')
+    }
 
     for (let i = 0; i <= futureFilters.length - 1; i++) {
       if (i === 0) {
@@ -204,10 +207,6 @@ module.exports = {
           value = value + addRow(classificationData.data[futureFilters[i].index].data, 'Próximo')
         }
       }
-    }
-
-    for (const eachFilter of currentFilters) {
-      value = value + addRow(classificationData.data[eachFilter.index].data, 'Actual')
     }
 
     value = value + '</tbody> </table>'
