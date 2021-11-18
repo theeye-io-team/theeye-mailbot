@@ -96,6 +96,7 @@ module.exports = {
     value = (elements <= 1 && progressDetail) ? `<span style="color:${resultNormal}; font-size:26px; font-weigth:bold"; font>Nothing to worry about<span>` : value + '</tbody> </table>'
 
     const titleDate = `${DateTime.fromJSDate(new Date(classificationData.data.runtimeDate)).toFormat('dd-MM-yyyy')}`
+    const indicatorOrder = `${DateTime.fromJSDate(new Date(classificationData.data.runtimeDate)).toFormat('yyyyMMdd')}`
 
     const indicator = new TheEyeIndicator(progressDetail ? 
       config.indicator_titles.progress_detail || 'Progress Detail' : 
@@ -103,7 +104,7 @@ module.exports = {
       config.indicator_titles.summary.replace(/%DATE%/gi, titleDate) :
       `${config.indicator_titles.summary} ${titleDate}`)
 
-    indicator.order = progressDetail ? 1 : 10
+    indicator.order = progressDetail ? 1 : Number(indicatorOrder)
     indicator.accessToken = config.api.accessToken
     indicator.value = value
     indicator.state = ''
