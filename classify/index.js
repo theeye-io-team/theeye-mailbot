@@ -161,7 +161,7 @@ const sendAlert = async (filter, state, severity) => {
     const subject = `Alerta de Retraso ${severity} correo ${filter.data.indicatorTitle}`
     const body = `
       <p>Estimado,</p> 
-      <p>El siguiente correo se encuentra demorado con criticidad <b>${severity}</b></p>
+      <p>El siguiente correo se encuentra demorado con severidad <b>${severity}</b></p>
       <ul>
         <li><b>indicatorTitle: </b>${filter.data.indicatorTitle}</li>
         <li><b>From: </b>${filter.data.from}</li>
