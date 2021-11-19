@@ -139,8 +139,9 @@ const main = module.exports = async () => {
   const MOA_ACL = `${config.acls.manager},${config.acls.operator},${config.acls.administrator}`.split(',')
 
   await indicatorHandler.handleProgressIndicator(progress * 100 / filters.length, timezone, generalSeverity, generalState, MOA_ACL)
-  await indicatorHandler.handleSummaryIndicator(classificationCache, progressDetail = false, config.acls.administrator)
-  await indicatorHandler.handleSummaryIndicator(classificationCache, progressDetail = true, MOA_ACL)
+  await indicatorHandler.handleSummaryIndicator(classificationCache, progressDetail = false, onlyWaiting = false, config.acls.administrator)
+  await indicatorHandler.handleSummaryIndicator(classificationCache, progressDetail = true, onlyWaiting = false, config.acls.operator)
+  await indicatorHandler.handleSummaryIndicator(classificationCache, progressDetail = true, onlyWaiting = true, config.acls.manager)
   await indicatorHandler.handleStatusIndicator(classificationCache, config.acls.administrator)
 
   await mailBot.closeConnection()
@@ -161,7 +162,7 @@ const sendAlert = async (filter, state, severity) => {
     const subject = `Alerta de Retraso ${severity} correo ${filter.data.indicatorTitle}`
     const body = `
       <p>Estimado,</p> 
-      <p>El siguiente correo se encuentra demorado con criticidad <b>${severity}</b></p>
+      <p>El siguiente correo se encuentra demorado con severidad <b>${severity}</b></p>
       <ul>
         <li><b>indicatorTitle: </b>${filter.data.indicatorTitle}</li>
         <li><b>From: </b>${filter.data.from}</li>

@@ -31,7 +31,7 @@ module.exports = {
     return indicator.put()
   },
 
-  handleSummaryIndicator (classificationData, progressDetail, acl) {
+  handleSummaryIndicator (classificationData, progressDetail, onlyWaiting, acl) {
     let elements = 1
 
     let value = `
@@ -81,12 +81,17 @@ module.exports = {
           </tr>
           `
 
-        if (progressDetail && filterData.result.state && filterData.result.state !== 'normal') {
+        if (progressDetail && !onlyWaiting && filterData.result.state && filterData.result.state !== 'normal') {
           elements++
           value = value + filterValue
         }
 
-        if (!progressDetail) {
+        if (!progressDetail && !onlyWaiting) {
+          elements++
+          value = value + filterValue
+        }
+
+        if(progressDetail && onlyWaiting && filterData.result.state && filterData.result.state != 'normal' && !filterData.solved) {
           elements++
           value = value + filterValue
         }
@@ -98,11 +103,13 @@ module.exports = {
     const titleDate = `${DateTime.fromJSDate(new Date(classificationData.data.runtimeDate)).toFormat('dd-MM-yyyy')}`
     const indicatorOrder = `${DateTime.fromJSDate(new Date(classificationData.data.runtimeDate)).toFormat('yyyyMMdd')}`
 
-    const indicator = new TheEyeIndicator(progressDetail ? 
+    const indicator = new TheEyeIndicator(progressDetail && !onlyWaiting ? 
       config.indicator_titles.progress_detail || 'Progress Detail' : 
-      (/%DATE%/gi).test(config.indicator_titles.summary) ? 
-      config.indicator_titles.summary.replace(/%DATE%/gi, titleDate) :
-      `${config.indicator_titles.summary} ${titleDate}`)
+      progressDetail && onlyWaiting ?
+        config.indicator_titles.progress_detail_only_waiting || 'Progress Detail 2' :
+        (/%DATE%/gi).test(config.indicator_titles.summary) ? 
+          config.indicator_titles.summary.replace(/%DATE%/gi, titleDate) :
+          `${config.indicator_titles.summary} ${titleDate}`)
 
     indicator.order = progressDetail ? 1 : Number(indicatorOrder)
     indicator.accessToken = config.api.accessToken
