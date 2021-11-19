@@ -110,14 +110,22 @@ module.exports = {
         (/%DATE%/gi).test(config.indicator_titles.summary) ? 
           config.indicator_titles.summary.replace(/%DATE%/gi, titleDate) :
           `${config.indicator_titles.summary} ${titleDate}`)
-
-    indicator.order = progressDetail ? 1 : Number(indicatorOrder)
-    indicator.accessToken = config.api.accessToken
-    indicator.value = value
-    indicator.state = ''
-    indicator.severity = 'low'
-    indicator.acl = (elements <= 1 && progressDetail) ? [] : acl
-    return indicator.put()
+    
+    if (progressDetail && onlyWaiting && elements <= 1) { 
+      try {
+        await indicator.remove()
+      } catch(err) {
+        return err.message
+      }
+    } else {
+      indicator.order = progressDetail ? 1 : Number(indicatorOrder)
+      indicator.accessToken = config.api.accessToken
+      indicator.value = value
+      indicator.state = ''
+      indicator.severity = 'low'
+      indicator.acl = (elements <= 1 && progressDetail) ? [] : acl
+      return indicator.put()
+    }
   },
 
   handleStatusIndicator (classificationData, acl) {
