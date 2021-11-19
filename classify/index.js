@@ -143,7 +143,7 @@ const main = module.exports = async () => {
     indicatorHandler.handleSummaryIndicator(classificationCache, progressDetail = false, onlyWaiting = false, config.acls.administrator).catch(err => err),
     indicatorHandler.handleSummaryIndicator(classificationCache, progressDetail = true, onlyWaiting = false, config.acls.operator).catch(err => err),
     indicatorHandler.handleSummaryIndicator(classificationCache, progressDetail = true, onlyWaiting = true, config.acls.manager).catch(err => err),
-    indicatorHandler.handleStatusIndicator(classificationCache, config.acls.administrator.catch(err => err))
+    indicatorHandler.handleStatusIndicator(classificationCache, config.acls.administrator).catch(err => err)
   ])
 
   await mailBot.closeConnection()
