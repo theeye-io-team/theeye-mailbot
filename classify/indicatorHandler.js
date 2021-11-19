@@ -31,7 +31,7 @@ module.exports = {
     return indicator.put()
   },
 
-  async handleSummaryIndicator (classificationData, progressDetail, onlyWaiting, acl) {
+  handleSummaryIndicator (classificationData, progressDetail, onlyWaiting, acl) {
     let elements = 1
 
     let value = `
@@ -103,29 +103,30 @@ module.exports = {
     const titleDate = `${DateTime.fromJSDate(new Date(classificationData.data.runtimeDate)).toFormat('dd-MM-yyyy')}`
     const indicatorOrder = `${DateTime.fromJSDate(new Date(classificationData.data.runtimeDate)).toFormat('yyyyMMdd')}`
 
-    const indicator = new TheEyeIndicator(progressDetail && !onlyWaiting ? 
+    const titleDefinition = (progressDetail && !onlyWaiting ? 
       config.indicator_titles.progress_detail || 'Progress Detail' : 
       progressDetail && onlyWaiting ?
         config.indicator_titles.progress_detail_only_waiting || 'Progress Detail 2' :
         (/%DATE%/gi).test(config.indicator_titles.summary) ? 
           config.indicator_titles.summary.replace(/%DATE%/gi, titleDate) :
           `${config.indicator_titles.summary} ${titleDate}`)
+
+    const indicator = new TheEyeIndicator(titleDefinition)
+    indicator.accessToken = config.api.accessToken
     
-    if (progressDetail && onlyWaiting && elements <= 1) { 
-      try {
-        await indicator.remove()
-      } catch(err) {
-        return err.message
-      }
+    let promise
+    if (progressDetail && onlyWaiting && elements <= 1) {
+      promise = indicator.remove()
     } else {
       indicator.order = progressDetail ? 1 : Number(indicatorOrder)
-      indicator.accessToken = config.api.accessToken
       indicator.value = value
       indicator.state = ''
       indicator.severity = 'low'
       indicator.acl = (elements <= 1 && progressDetail) ? [] : acl
-      return indicator.put()
+      promise = indicator.put()
     }
+
+    return promise
   },
 
   handleStatusIndicator (classificationData, acl) {
