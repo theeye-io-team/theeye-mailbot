@@ -146,6 +146,8 @@ const main = module.exports = async () => {
     indicatorHandler.handleStatusIndicator(classificationCache, config.acls.administrator).catch(err => err)
   ])
 
+  console.log(indicatorsUpdates)
+
   await mailBot.closeConnection()
 
   return 'ok'
