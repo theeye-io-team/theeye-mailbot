@@ -31,7 +31,7 @@ module.exports = {
     return indicator.put()
   },
 
-  handleSummaryIndicator (classificationData, progressDetail, onlyWaiting, acl) {
+  async handleSummaryIndicator (classificationData, progressDetail, onlyWaiting, acl) {
     let elements = 1
 
     let value = `
