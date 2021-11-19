@@ -19,7 +19,7 @@ const main = module.exports = async () => {
   const currentDate = DateTime.now().setZone(timezone)
 
   for (const filter of filters) {
-    const hash = JSON.stringify(filter)
+    const hash = createHash(JSON.stringify(filter))
     const thresholds = filter.thresholdTimes
     const startDate = DateTime.fromISO(
       Helpers.timeExpressionToDate(thresholds.start, timezone).toISOString()
@@ -30,7 +30,7 @@ const main = module.exports = async () => {
       continue
     }
 
-    if (cacheData[thresholds.start] === true) {
+    if (cacheData[hash] === true) {
       console.log(`already sent ${startDate}`)
       continue
     }
