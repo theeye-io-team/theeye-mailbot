@@ -16,7 +16,8 @@ const main = module.exports = async () => {
   const titles = [
     config.indicator_titles.progress,
     config.indicator_titles.status,
-    config.indicator_titles.progress_detail
+    config.indicator_titles.progress_detail,
+    config.indicator_titles.progress_detail_only_waiting
   ]
 
   for (const data of indicators) {
