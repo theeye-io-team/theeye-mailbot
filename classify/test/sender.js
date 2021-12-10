@@ -22,7 +22,7 @@ const main = module.exports = async () => {
   })
 
   const classifyCacheData = classificationCache.data
-  console.log(classifyCacheData)
+  // console.log(classifyCacheData)
 
   const { timezone } = config
   const currentDate = DateTime.now().setZone(timezone)
