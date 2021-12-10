@@ -2,9 +2,11 @@ require('dotenv').config()
 const crypto = require('crypto')
 
 const CACHE_NAME = 'sender'
+const DEFAULT_CACHE_NAME = 'classification'
 const { DateTime } = require('luxon')
 const sendmail = require('theeye-bot-sdk/core/mail/sender')
 
+const ClassificationCache = require('../cache')
 const Cache = require('../../lib/cache')
 const Helpers = require('../../lib/helpers')
 const config = require('../../lib/config').decrypt()
@@ -15,15 +17,25 @@ const main = module.exports = async () => {
   const cache = new Cache({ cacheId: CACHE_NAME })
   const cacheData = cache.get()
 
+  const classificationCache = new ClassificationCache({
+    cacheId: (config.cacheName || DEFAULT_CACHE_NAME)
+  })
+
+  const classifyCacheData = classificationCache.data
+  console.log(classifyCacheData)
+
   const { timezone } = config
   const currentDate = DateTime.now().setZone(timezone)
+  const runtimeDate = DateTime.fromISO(new Date(classifyCacheData.runtimeDate).toISOString())
+  console.log(`runtime date is set to ${runtimeDate}`)
+
 
   for (const filter of filters) {
     const hash = createHash(JSON.stringify(filter))
     const thresholds = filter.thresholdTimes
-    const startDate = DateTime.fromISO(
-      Helpers.timeExpressionToDate(thresholds.start, timezone).toISOString()
-    ).setZone(timezone)
+    const startDate = 
+      Helpers.getFormattedThresholdDate(thresholds.start, timezone, runtimeDate, config.startOfDay)
+    
 
     if (startDate > currentDate) {
       console.log(`waiting until ${startDate}`)
