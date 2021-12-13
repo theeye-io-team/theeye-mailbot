@@ -14,6 +14,7 @@ const nodemailer = require('nodemailer')
 const filters = require('../../filters')
 
 const main = module.exports = async () => {
+
   const cache = new Cache({ cacheId: CACHE_NAME })
   const cacheData = cache.get()
 
@@ -47,6 +48,11 @@ const main = module.exports = async () => {
       continue
     }
 
+    if(!randomSend(10, 50)) {
+      console.log('didnt pass chance check, wont send yet')
+      continue
+    }
+
     console.log(`sending ${startDate}`)
 
     const transport = nodemailer.createTransport(config.sender.transport)
@@ -69,6 +75,15 @@ const createHash = (string) => {
   hash.update(string)
   return hash.digest('hex')
 }
+
+const randomSend = (max, chance) => {
+
+  const number = Math.floor(Math.random() * max)
+  if(number < chance*max/100) {
+    return true
+  }
+}
+
 
 if (require.main === module) {
   main().then(console.log).catch(console.error)
