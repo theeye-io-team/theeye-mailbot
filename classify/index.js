@@ -70,7 +70,8 @@ const main = module.exports = async () => {
 
     const messages = await mailBot.searchMessages(
       Object.assign({}, filter, {
-        since: Helpers.timeExpressionToDate(thresholds.start, timezone).toISOString()
+        since: (new Date(DateTime.fromISO(Helpers.timeExpressionToDate(thresholds.start, timezone).toISOString()).plus({hours:-config.searchSince}))).toISOString()
+        // since: runtimeDate
       })
     )
 
