@@ -3,7 +3,7 @@ bucket=$1
 
 cd ..
 
-tar -czf theeye-mailbot.tgz theeye-mailbot/
+tar -czf theeye-mailbot.tgz theeye-mailbot-classify/
 
 filename="theeye-mailbot-$(date +'%Y%m%d').tgz"
 

@@ -3,17 +3,22 @@ require('dotenv').config()
 // default values
 const DEFAULT_CACHE_NAME = 'classification'
 
-// const tz = 'America/Argentina/Buenos_Aires'
-
 const { DateTime } = require('luxon')
 
 const Helpers = require('../lib/helpers')
 const MailBot = require('../lib/mailbot')
-const indicatorHandler = require('./indicatorHandler')
+const IndicatorHandler = require('./indicatorHandler')
 const TheEyeAlert = require('../lib/alert')
 const ClassificationCache = require('./cache')
 const config = require('../lib/config').decrypt()
 const filters = require('../filters')
+
+if (process.env.IGNORE_MESSAGES_TIMEZONE === 'true') {
+  console.log('Global env IGNORE_MESSAGES_TIMEZONE activated')
+}
+if (process.env.USE_SERVER_RECEIVED_DATE === 'true') {
+  console.log('Global env USE_SERVER_RECEIVED_DATE activated')
+}
 
 const main = module.exports = async () => {
   const { timezone } = config
@@ -36,6 +41,8 @@ const main = module.exports = async () => {
   let progress = 0
 
   for (const filter of filters) {
+    console.log('-------------------')
+    console.log(`Classifying: ${filter.indicatorDescription}`)
     const filterHash = classificationCache.createHash(JSON.stringify(filter))
 
     if (!cacheData[filterHash]) {
@@ -68,12 +75,17 @@ const main = module.exports = async () => {
 
     progress++
 
-    const messages = await mailBot.searchMessages(
-      Object.assign({}, filter, {
-        since: (new Date(DateTime.fromISO(Helpers.timeExpressionToDate(thresholds.start, timezone).toISOString()).plus({hours:-config.searchSince}))).toISOString()
-        // since: runtimeDate
-      })
-    )
+    const searchSinceModifier = (config.searchSince || 12)
+    const since = new Date(
+      DateTime.fromISO(
+        Helpers.timeExpressionToDate(
+          thresholds.start,
+          timezone
+        ).toISOString()
+      ).plus({ hours: -searchSinceModifier })
+    ).toISOString()
+
+    const messages = await mailBot.searchMessages(Object.assign({}, filter, { since }))
 
     let found = false
 
@@ -81,12 +93,7 @@ const main = module.exports = async () => {
       for (const message of messages) {
         await message.getContent()
 
-        let mailDate
-        if (filter.ignoreMessageTimezone === true) {
-          mailDate = ignoreOriginalTimezone(message.date, timezone)
-        } else {
-          mailDate = setTimezone(message.date, timezone)
-        }
+        const mailDate = getMessageDate({ message, filter, timezone })
         console.log(`mail date is ${mailDate}`)
 
         // ignore old messages
@@ -137,19 +144,109 @@ const main = module.exports = async () => {
     }
   }
 
-  const MOA_ACL = `${config.acls.manager},${config.acls.operator},${config.acls.administrator}`.split(',')
+  console.log('-------------------')
 
-  const indicatorsUpdates = await Promise.all([
-    indicatorHandler.handleProgressIndicator(progress * 100 / filters.length, timezone, generalSeverity, generalState, MOA_ACL).catch(err => err),
-    indicatorHandler.handleSummaryIndicator(classificationCache, progressDetail = false, onlyWaiting = false, config.acls.administrator).catch(err => err),
-    indicatorHandler.handleSummaryIndicator(classificationCache, progressDetail = true, onlyWaiting = false, config.acls.operator).catch(err => err),
-    indicatorHandler.handleSummaryIndicator(classificationCache, progressDetail = true, onlyWaiting = true, config.acls.manager).catch(err => err),
-    indicatorHandler.handleStatusIndicator(classificationCache, config.acls.administrator).catch(err => err)
-  ])
+  const updateIndicators = () => {
+    const acls = getAcls()
+    if (!acls) { return }
+    const aclsAll = [].concat(acls.manager, acls.operator, acls.administrator)
+
+    return Promise.all([
+      IndicatorHandler.handleProgressIndicator(progress * 100 / filters.length, timezone, generalSeverity, generalState, aclsAll).catch(err => err),
+      IndicatorHandler.handleSummaryIndicator(classificationCache, progressDetail = false, onlyWaiting = false, acls.administrator).catch(err => err),
+      IndicatorHandler.handleSummaryIndicator(classificationCache, progressDetail = true, onlyWaiting = false, acls.operator).catch(err => err),
+      IndicatorHandler.handleSummaryIndicator(classificationCache, progressDetail = true, onlyWaiting = true, acls.manager).catch(err => err),
+      IndicatorHandler.handleStatusIndicator(classificationCache, acls.administrator).catch(err => err)
+    ])
+  }
+
+  await updateIndicators()
 
   await mailBot.closeConnection()
 
   return 'ok'
+}
+
+/**
+ * Ensure acls are initialized and in correct format.
+ * Else initialize
+ */
+const getAcls = () => {
+  const acls = config?.acls
+  if (!acls) { return null }
+
+  const init = (key) => {
+    if (!Array.isArray(acls[key])) {
+      return []
+    }
+  }
+
+  return {
+    manager: init('manager'),
+    operator: init('operator'),
+    administrator: init('administrator'),
+  }
+}
+
+const getMessageDate = ({ message, filter, timezone }) => {
+  const useReceivedDate = (
+    process.env.USE_SERVER_RECEIVED_DATE === 'true' ||
+    config.useReceivedDate ||
+    filter.useReceivedDate
+  )
+
+  let messageDate
+  if (useReceivedDate === true) {
+    console.log('useReceivedDate: Using server "Received" date')
+    messageDate = message.dateReceived
+  } else {
+    console.log('Using message "Sent" date')
+    messageDate = message.date
+  }
+
+  const ignoreMessageTimezone = (
+    process.env.IGNORE_MESSAGES_TIMEZONE === 'true' ||
+    config.ignoreMessageTimezone ||
+    filter.ignoreMessageTimezone
+  )
+
+  if (ignoreMessageTimezone === true) {
+    console.log('ignoreMessageTimezone: Using timezone configuration')
+    return ignoreOriginalTimezone(messageDate, timezone)
+  } else {
+    console.log('Using message timezone')
+    return setTimezone(messageDate, timezone)
+  }
+}
+
+/**
+ * Keep the same date ignoring the original Timezone.
+ * This is assuming that the original timezone is wrong
+ * and it must be replaced by the real arrival time.
+ *
+ * @param {Date} date
+ * @param {String} timezone
+ * @return {DateTime} luxon
+ */
+const ignoreOriginalTimezone = (date, timezone) => {
+  // use toISOString formatter in UTC/Zero timezone and remove the timezone part
+  const trimmedDate = date.toISOString().replace(/\.[0-9]{3}Z$/, '')
+  // create a new Date and initialize it using the desired timezone
+  const tzDate = DateTime.fromISO(trimmedDate, { zone: timezone })
+  return tzDate
+}
+
+/**
+ * Change date to the timezone
+ *
+ * @param {Date} date
+ * @param {String} timezone
+ * @return {DateTime} luxon
+ */
+const setTimezone = (date, timezone) => {
+  return DateTime
+    .fromISO(date.toISOString())
+    .setZone(timezone)
 }
 
 /**
@@ -161,6 +258,19 @@ const main = module.exports = async () => {
  */
 
 const sendAlert = async (filter, state, severity) => {
+
+  const recipients = getAcls()
+  if (!recipients) {
+    console.log('Notification: no recipients defined')
+    return true
+  }
+
+  const alerts = config?.api?.alert
+  if (!alerts || !alerts.task || !alerts.secret) {
+    console.log('Notification: api configuration is missing')
+    return true
+  }
+
   if (state === 'failure') {
     const subject = `Alerta de Retraso ${severity} correo ${filter.data.indicatorTitle}`
     const body = `
@@ -177,15 +287,20 @@ const sendAlert = async (filter, state, severity) => {
         <li><b>Critical: </b>${filter.data.critical}</li>
       </ul>
     `
-    const recipients = config.acls.manager.concat(config.acls.operator)
-    const alert = new TheEyeAlert(config.api.alert.task, config.api.alert.secret, subject, body, recipients)
-    await alert.post()
+
+    const notification = new TheEyeAlert(
+      alerts.task,
+      alerts.secret,
+      subject,
+      body,
+      recipients
+    )
+
+    await notification.post()
     return true
   }
 
-  if (state === 'failure' && filter.alert) {
-    return true
-  }
+  if (state === 'failure' && filter.alert) { return true }
 
   return false
 }
@@ -284,36 +399,6 @@ const indicatorState = (date, lowFilterDate, highFilterDate, criticalFilterDate)
   }
 
   return { state, severity }
-}
-
-/**
- * Change date to the timezone
- *
- * @param {Date} date
- * @param {String} timezone
- * @return {DateTime} luxon
- */
-const setTimezone = (date, timezone) => {
-  return DateTime
-    .fromISO(date.toISOString())
-    .setZone(timezone)
-}
-
-/**
- * Keep the same date ignoring the original Timezone.
- * This is assuming that the original timezone is wrong
- * and it must be replaced by the real arrival time.
- *
- * @param {Date} date
- * @param {String} timezone
- * @return {DateTime} luxon
- */
-const ignoreOriginalTimezone = (date, timezone) => {
-  // use toISOString formatter in UTC/Zero timezone and remove the timezone part
-  const trimmedDate = date.toISOString().replace(/\.[0-9]{3}Z$/, '')
-  // create a new Date and initialize it using the desired timezone
-  const tzDate = DateTime.fromISO(trimmedDate, { zone: timezone })
-  return tzDate
 }
 
 /**

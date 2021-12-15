@@ -104,12 +104,12 @@ module.exports = {
     const indicatorOrder = `${DateTime.fromJSDate(new Date(classificationData.data.runtimeDate)).toFormat('yyyyMMdd')}`
 
     const titleDefinition = (progressDetail && !onlyWaiting ? 
-      config.indicator_titles.progress_detail || 'Progress Detail' : 
+      config.indicator_titles?.progress_detail || 'Progress Detail' : 
       progressDetail && onlyWaiting ?
-        config.indicator_titles.progress_detail_only_waiting || 'Progress Detail 2' :
-        (/%DATE%/gi).test(config.indicator_titles.summary) ? 
-          config.indicator_titles.summary.replace(/%DATE%/gi, titleDate) :
-          `${config.indicator_titles.summary} ${titleDate}`)
+        config.indicator_titles?.progress_detail_only_waiting || 'Progress Detail 2' :
+        (/%DATE%/gi).test(config.indicator_titles?.summary) ? 
+          config.indicator_titles?.summary.replace(/%DATE%/gi, titleDate) :
+          `${config.indicator_titles?.summary} ${titleDate}`)
 
     const indicator = new TheEyeIndicator(titleDefinition)
     indicator.accessToken = config.api.accessToken
