@@ -1,4 +1,13 @@
 
+
+if [ -z "${1+x}" ];
+then
+  name=`basename "$0"`
+  echo "usage: "
+  echo "   ${name} BUCKET"
+  exit 1
+fi
+
 bucket=$1
 
 cd ..
