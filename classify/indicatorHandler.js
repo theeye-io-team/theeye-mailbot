@@ -31,7 +31,7 @@ module.exports = {
     return indicator.put()
   },
 
-  handleSummaryIndicator (classificationData, progressDetail, onlyWaiting, acl) {
+  async handleSummaryIndicator (classificationData, progressDetail, onlyWaiting, acl) {
     let elements = 1
 
     let value = `
@@ -116,7 +116,13 @@ module.exports = {
     
     let promise
     if (progressDetail && onlyWaiting && elements <= 1) {
-      promise = indicator.remove()
+      const indicators = await indicator.Fetch()
+
+      for (const data of indicators) {
+          if(data.title === titleDefinition) {
+            promise = indicator.remove()
+          }
+      }
     } else {
       indicator.order = progressDetail ? 1 : Number(indicatorOrder)
       indicator.value = value
