@@ -146,6 +146,8 @@ const main = module.exports = async () => {
 
   console.log('-------------------')
 
+  const orderedCache = Helpers.orderCache(classificationCache, timezone, runtimeDate, config.startOfDay)
+
   const updateIndicators = () => {
     const acls = getAcls()
     if (!acls) { return }
@@ -153,10 +155,10 @@ const main = module.exports = async () => {
     
     return Promise.all([
       IndicatorHandler.handleProgressIndicator(progress * 100 / filters.length, timezone, generalSeverity, generalState, aclsAll).catch(err => err),
-      IndicatorHandler.handleSummaryIndicator(classificationCache, progressDetail = false, onlyWaiting = false, acls.administrator).catch(err => err),
-      IndicatorHandler.handleSummaryIndicator(classificationCache, progressDetail = true, onlyWaiting = false, acls.operator).catch(err => err),
-      IndicatorHandler.handleSummaryIndicator(classificationCache, progressDetail = true, onlyWaiting = true, acls.manager).catch(err => err),
-      IndicatorHandler.handleStatusIndicator(classificationCache, acls.administrator).catch(err => err)
+      IndicatorHandler.handleSummaryIndicator(orderedCache, progressDetail = false, onlyWaiting = false, acls.administrator).catch(err => err),
+      IndicatorHandler.handleSummaryIndicator(orderedCache, progressDetail = true, onlyWaiting = false, acls.operator).catch(err => err),
+      IndicatorHandler.handleSummaryIndicator(orderedCache, progressDetail = true, onlyWaiting = true, acls.manager).catch(err => err),
+      IndicatorHandler.handleStatusIndicator(orderedCache, acls.administrator).catch(err => err)
     ])
   }
 
