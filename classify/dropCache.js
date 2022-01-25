@@ -3,10 +3,8 @@ require('dotenv').config()
 const Cache = require('../lib/cache')
 
 const main = module.exports = async (cacheId) => {
-
   const cache = new Cache({ cacheId })
   return cache.drop()
-
 }
 
 if (require.main === module) {

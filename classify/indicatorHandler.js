@@ -4,6 +4,7 @@ const { DateTime } = require('luxon')
 const Helpers = require('../lib/helpers')
 const TheEyeIndicator = require('../lib/indicator')
 const config = require('../lib/config').decrypt()
+TheEyeIndicator.accessToken = config.api.accessToken
 
 // STYLES
 
@@ -18,6 +19,33 @@ const resultNormal = '#50d841'
 const resultStandby = '#ffffff'
 
 module.exports = {
+
+  async orderIndicators (tag) {
+    let order = 1000
+    const resp = await TheEyeIndicator.Fetch()
+    const indicators = JSON.parse(resp.body)
+    const taggedIndicators = indicators.filter(indicator => indicator.tags.indexOf(tag) !== -1)
+
+    taggedIndicators.sort((elem1, elem2) => {
+      const elem1Date = DateTime.fromISO(elem1.creation_date)
+      const elem2Date = DateTime.fromISO(elem2.creation_date)
+      if (elem1Date > elem2Date) {
+        return -1
+      }
+      if (elem1Date < elem2Date) {
+        return 1
+      }
+      return 0
+    })
+
+    for (const data of taggedIndicators) {
+      const indicator = new TheEyeIndicator(data.title, data.type)
+      indicator.accessToken = config.api.accessToken
+      await indicator.patch({ order })
+      order++
+    }
+  },
+
   handleProgressIndicator (progress, timezone, severity, state, acl) {
     const indicator = new TheEyeIndicator(config.indicator_titles?.progress || 'Progress')
     indicator.order = 0
@@ -91,7 +119,7 @@ module.exports = {
           value = value + filterValue
         }
 
-        if(progressDetail && onlyWaiting && filterData.result.state && filterData.result.state != 'normal' && !filterData.solved) {
+        if (progressDetail && onlyWaiting && filterData.result.state && filterData.result.state !== 'normal' && !filterData.solved) {
           elements++
           value = value + filterValue
         }
@@ -101,33 +129,33 @@ module.exports = {
     value = (elements <= 1 && progressDetail) ? `<span style="color:${resultNormal}; font-size:26px; font-weigth:bold"; font>Nothing to worry about<span>` : value + '</tbody> </table>'
 
     const titleDate = `${DateTime.fromJSDate(new Date(classificationData.data.runtimeDate)).toFormat('dd-MM-yyyy')}`
-    const indicatorOrder = `${DateTime.fromJSDate(new Date(classificationData.data.runtimeDate)).toFormat('yyyyMMdd')}`
 
-    const titleDefinition = (progressDetail && !onlyWaiting ? 
-      config.indicator_titles?.progress_detail || 'Progress Detail' : 
-      progressDetail && onlyWaiting ?
-        config.indicator_titles?.progress_detail_only_waiting || 'Progress Detail 2' :
-        (/%DATE%/gi).test(config.indicator_titles?.summary) ? 
-          config.indicator_titles?.summary.replace(/%DATE%/gi, titleDate) :
-          `${config.indicator_titles?.summary} ${titleDate}`)
+    const titleDefinition = (progressDetail && !onlyWaiting
+      ? config.indicator_titles?.progress_detail || 'Progress Detail'
+      : progressDetail && onlyWaiting
+        ? config.indicator_titles?.progress_detail_only_waiting || 'Progress Detail 2'
+        : (/%DATE%/gi).test(config.indicator_titles?.summary)
+            ? config.indicator_titles?.summary.replace(/%DATE%/gi, titleDate)
+            : `${config.indicator_titles?.summary} ${titleDate}`)
 
     const indicator = new TheEyeIndicator(titleDefinition)
     indicator.accessToken = config.api.accessToken
-    
+
     let promise
     if (progressDetail && onlyWaiting && elements <= 1) {
-      const indicators = await indicator.Fetch()
-
+      const resp = await TheEyeIndicator.Fetch()
+      const indicators = JSON.parse(resp.body)
       for (const data of indicators) {
-          if(data.title === titleDefinition) {
-            promise = indicator.remove()
-          }
+        if (data.title === titleDefinition) {
+          promise = indicator.remove()
+        }
       }
     } else {
-      indicator.order = progressDetail ? 1 : Number(indicatorOrder)
+      indicator.order = progressDetail ? 1 : 100
       indicator.value = value
       indicator.state = ''
       indicator.severity = 'low'
+      indicator.tags = progressDetail ? [] : ['summary']
       indicator.acl = (elements <= 1 && progressDetail) ? [] : acl
       promise = indicator.put()
     }
@@ -196,12 +224,11 @@ module.exports = {
         const filterData = classificationData.data[eachFilter].data
         const dataToPush = { start: filterData.start, low: filterData.low, high: filterData.high, critical: filterData.critical, solved: filterData.solved, index: eachFilter }
 
-        Helpers.getFormattedThresholdDate(dataToPush.start, config.timezone, runtimeDate, config.startOfDay) > DateTime.now() ? 
-          futureFilters.push(dataToPush) : 
-            filterData.solved ?
-              pastFilters.push(dataToPush) :
-              currentFilters.push(dataToPush)
-
+        Helpers.getFormattedThresholdDate(dataToPush.start, config.timezone, runtimeDate, config.startOfDay) > DateTime.now()
+          ? futureFilters.push(dataToPush)
+          : filterData.solved
+            ? pastFilters.push(dataToPush)
+            : currentFilters.push(dataToPush)
       } else {
         runtimeDate = DateTime.fromISO(new Date(classificationData.data[eachFilter]).toISOString())
       }
@@ -217,7 +244,7 @@ module.exports = {
         }
       }
     }
-    
+
     for (const eachFilter of currentFilters) {
       value = value + addRow(classificationData.data[eachFilter.index].data, 'Actual')
     }

@@ -144,15 +144,12 @@ const main = module.exports = async () => {
     }
   }
 
-  console.log('-------------------')
-
-  const orderedCache = Helpers.orderCache(classificationCache, timezone, runtimeDate, config.startOfDay)
-
   const updateIndicators = () => {
     const acls = getAcls()
     if (!acls) { return }
     const aclsAll = [].concat(acls.manager, acls.operator, acls.administrator)
-    
+    const orderedCache = Helpers.orderCache(classificationCache, timezone, runtimeDate, config.startOfDay)
+
     return Promise.all([
       IndicatorHandler.handleProgressIndicator(progress * 100 / filters.length, timezone, generalSeverity, generalState, aclsAll).catch(err => err),
       IndicatorHandler.handleSummaryIndicator(orderedCache, progressDetail = false, onlyWaiting = false, acls.administrator).catch(err => err),
@@ -163,6 +160,8 @@ const main = module.exports = async () => {
   }
 
   await updateIndicators()
+
+  await IndicatorHandler.orderIndicators('summary')
 
   await mailBot.closeConnection()
 
@@ -187,7 +186,7 @@ const getAcls = () => {
   return {
     manager: init('manager'),
     operator: init('operator'),
-    administrator: init('administrator'),
+    administrator: init('administrator')
   }
 }
 
@@ -261,7 +260,6 @@ const setTimezone = (date, timezone) => {
  */
 
 const sendAlert = async (filter, state, severity) => {
-
   const recipients = getAcls()
   if (!recipients) {
     console.log('Notification: no recipients defined')
