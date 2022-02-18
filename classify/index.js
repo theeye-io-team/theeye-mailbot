@@ -22,7 +22,6 @@ if (process.env.USE_SERVER_RECEIVED_DATE === 'true') {
 
 const main = module.exports = async () => {
   const { timezone } = config
-  let generalState, generalSeverity
 
   const classificationCache = new ClassificationCache({
     cacheId: (config.cacheName || DEFAULT_CACHE_NAME),
@@ -128,19 +127,6 @@ const main = module.exports = async () => {
       cacheData[filterHash].data.result.severity = severity
 
       classificationCache.setHashData(filterHash, cacheData[filterHash])
-
-      if (!generalState && !generalSeverity) {
-        generalState = state
-        generalSeverity = severity
-      }
-
-      if (state === 'failure') {
-        generalState = state
-      }
-
-      if (transformSeverity(generalSeverity) < transformSeverity(severity)) {
-        generalSeverity = severity
-      }
     }
   }
 
@@ -151,11 +137,11 @@ const main = module.exports = async () => {
     const orderedCache = Helpers.orderCache(classificationCache, timezone, runtimeDate, config.startOfDay)
 
     return Promise.all([
-      IndicatorHandler.handleProgressIndicator(progress * 100 / filters.length, timezone, generalSeverity, generalState, aclsAll).catch(err => err),
-      IndicatorHandler.handleSummaryIndicator(orderedCache, progressDetail = false, onlyWaiting = false, acls.administrator).catch(err => err),
-      IndicatorHandler.handleSummaryIndicator(orderedCache, progressDetail = true, onlyWaiting = false, acls.operator).catch(err => err),
-      IndicatorHandler.handleSummaryIndicator(orderedCache, progressDetail = true, onlyWaiting = true, acls.manager).catch(err => err),
-      IndicatorHandler.handleStatusIndicator(orderedCache, acls.administrator).catch(err => err)
+      IndicatorHandler.handleProgressIndicator(orderedCache, aclsAll).catch(err => console.log(err)),
+      IndicatorHandler.handleSummaryIndicator(orderedCache, progressDetail = false, onlyWaiting = false, acls.administrator).catch(err => console.log(err)),
+      IndicatorHandler.handleSummaryIndicator(orderedCache, progressDetail = true, onlyWaiting = false, acls.operator).catch(err => console.log(err)),
+      IndicatorHandler.handleSummaryIndicator(orderedCache, progressDetail = true, onlyWaiting = true, acls.manager).catch(err => console.log(err)),
+      IndicatorHandler.handleStatusIndicator(orderedCache, acls.administrator).catch(err => console.log(err))
     ])
   }
 
@@ -304,19 +290,6 @@ const sendAlert = async (filter, state, severity) => {
   if (state === 'failure' && filter.alert) { return true }
 
   return false
-}
-
-/**
- *
- * @param {String} severity
- * @returns {Number} severity
- */
-const transformSeverity = (severity) => {
-  switch (severity) {
-    case 'low': return 1
-    case 'high': return 2
-    case 'critical': return 3
-  }
 }
 
 /**

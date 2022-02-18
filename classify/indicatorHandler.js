@@ -46,13 +46,77 @@ module.exports = {
     }
   },
 
-  handleProgressIndicator (progress, timezone, severity, state, acl) {
+  handleProgressIndicator (classificationData, acl) {
+
+    let generalState, generalSeverity, generalProgress, cacheLength
+
+
+    /**
+     *
+     * @param {String} severity
+     * @returns {Number} severity
+     */
+    const transformSeverity = (severity) => {
+      switch (severity) {
+        case 'low': return 1
+        case 'high': return 2
+        case 'critical': return 3
+      }
+    }
+
+    const progressIndicatorData = () => {
+      const filterKeys = Object.keys(classificationData.data)
+      filterKeys.shift()
+
+      cacheLength = filterKeys.length
+
+      const processedFilters = []
+      const failureFilters = []
+
+      filterKeys.forEach((key) => {
+
+        const filter = classificationData.data[key]
+
+        if(filter.processed) {
+          processedFilters.push(filter)
+        }
+
+        if(!filter.processed && (filter.data.result.state && filter.data.result.severity)) {
+          failureFilters.push(filter)
+        }
+      })
+
+      generalProgress = failureFilters.length + processedFilters.length
+      if (!generalState && !generalSeverity) {
+        generalState = 'normal'
+        generalSeverity = 'low'
+      }
+
+      if(failureFilters.length) {
+        failureFilters.forEach((filter) => {
+          if (filter.data.result.state === 'failure') {
+            generalState = filter.data.result.state
+          }
+
+          if (transformSeverity(generalSeverity) < transformSeverity(filter.data.result.severity)) {
+            generalSeverity = filter.data.result.severity
+          }
+
+        })
+        
+      }
+
+    }
+
+    progressIndicatorData()
+
+
     const indicator = new TheEyeIndicator(config.indicator_titles?.progress || 'Progress')
     indicator.order = 0
     indicator.accessToken = config.api.accessToken
-    indicator.value = Math.round(progress)
-    indicator.state = state
-    indicator.severity = severity
+    indicator.value = Math.round(generalProgress * 100 / cacheLength)
+    indicator.state = generalState
+    indicator.severity = generalSeverity
     indicator.type = 'progress'
     indicator.acl = acl
 
