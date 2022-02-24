@@ -47,10 +47,6 @@ module.exports = {
   },
 
   handleProgressIndicator (classificationData, acl) {
-
-    let generalState, generalSeverity, generalProgress, cacheLength
-
-
     /**
      *
      * @param {String} severity
@@ -61,62 +57,55 @@ module.exports = {
         case 'low': return 1
         case 'high': return 2
         case 'critical': return 3
+        default: return 0
       }
     }
 
-    const progressIndicatorData = () => {
-      const filterKeys = Object.keys(classificationData.data)
-      filterKeys.shift()
-
-      cacheLength = filterKeys.length
-
+    const progressIndicatorData = (cacheData) => {
       const processedFilters = []
       const failureFilters = []
 
-      filterKeys.forEach((key) => {
-
-        const filter = classificationData.data[key]
-
-        if(filter.processed) {
-          processedFilters.push(filter)
+      for (let filterHash in cacheData) {
+        if (filterHash !== 'runtimeDate') {
+          const filter = cacheData[filterHash]
+          if (filter.processed) { // ya llego
+            processedFilters.push(filter)
+          } else {
+            // si tiene state y severidad , esta fallando.
+            if (filter.data.result.state === 'failure') {
+              failureFilters.push(filter)
+            }
+          }
         }
-
-        if(!filter.processed && (filter.data.result.state && filter.data.result.severity)) {
-          failureFilters.push(filter)
-        }
-      })
-
-      generalProgress = failureFilters.length + processedFilters.length
-      if (!generalState && !generalSeverity) {
-        generalState = 'normal'
-        generalSeverity = 'low'
       }
 
-      if(failureFilters.length) {
-        failureFilters.forEach((filter) => {
-          if (filter.data.result.state === 'failure') {
-            generalState = filter.data.result.state
-          }
+      let state = 'normal'
+      let severity = 'low'
 
-          if (transformSeverity(generalSeverity) < transformSeverity(filter.data.result.severity)) {
-            generalSeverity = filter.data.result.severity
+      if (failureFilters.length > 0) {
+        state = 'failure'
+        for (let filter of failureFilters) {
+          if (transformSeverity(severity) < transformSeverity(filter.data.result.severity)) {
+            severity = filter.data.result.severity
           }
-
-        })
-        
+        }
       }
 
+      const progress = failureFilters.length + processedFilters.length
+
+      return { state, severity, progress }
     }
 
-    progressIndicatorData()
-
+    const { state, severity, progress } = progressIndicatorData(classificationData.data)
 
     const indicator = new TheEyeIndicator(config.indicator_titles?.progress || 'Progress')
     indicator.order = 0
     indicator.accessToken = config.api.accessToken
-    indicator.value = Math.round(generalProgress * 100 / cacheLength)
-    indicator.state = generalState
-    indicator.severity = generalSeverity
+
+    // length -1 , descuenta 1 por el runtimeDate que esta en cache
+    indicator.value = Math.round(progress * 100 / (classificationData.data.length - 1))
+    indicator.state = state
+    indicator.severity = severity
     indicator.type = 'progress'
     indicator.acl = acl
 
