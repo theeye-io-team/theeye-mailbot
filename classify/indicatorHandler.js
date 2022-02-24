@@ -103,7 +103,7 @@ module.exports = {
     indicator.accessToken = config.api.accessToken
 
     // length -1 , descuenta 1 por el runtimeDate que esta en cache
-    indicator.value = Math.round(progress * 100 / (classificationData.data.length - 1))
+    indicator.value = Math.round(progress * 100 / (Object.keys(classificationData.data).length - 1))
     indicator.state = state
     indicator.severity = severity
     indicator.type = 'progress'
