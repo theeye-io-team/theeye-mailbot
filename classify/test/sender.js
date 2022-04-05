@@ -13,12 +13,16 @@ const config = require('../../lib/config').decrypt()
 const nodemailer = require('nodemailer')
 const filters = require('../../filters')
 
-const main = module.exports = async () => {
+const main = module.exports = async (dateParam) => {
+  const cacheName = `${DEFAULT_CACHE_NAME}_${Helpers.buildCacheName(dateParam, config)}`
+  console.log({ cacheName })
+
   const cache = new Cache({ cacheId: CACHE_NAME })
   const cacheData = cache.get()
 
   const classificationCache = new ClassificationCache({
-    cacheId: (config.cacheName || DEFAULT_CACHE_NAME)
+    cacheId: cacheName,
+    runtimeDate: Helpers.buildRuntimeDate(dateParam, config)
   })
 
   const classifyCacheData = classificationCache.data
@@ -34,6 +38,8 @@ const main = module.exports = async () => {
     const thresholds = filter.thresholdTimes
     const startDate =
       Helpers.getFormattedThresholdDate(thresholds.start, timezone, runtimeDate, config.startOfDay)
+
+    // console.log(startDate)
 
     if (startDate > currentDate) {
       console.log(`waiting until ${startDate}`)
@@ -81,5 +87,5 @@ const randomSend = (max, chance) => {
 }
 
 if (require.main === module) {
-  main().then(console.log).catch(console.error)
+  main(process.argv[2]).then(console.log).catch(console.error)
 }

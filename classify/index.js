@@ -1,7 +1,7 @@
 require('dotenv').config()
 
 // default values
-const DEFAULT_CACHE_NAME = 'classification'
+const DEFAULT_CACHE_NAME = process.env.DEFAULT_CACHE_NAME || 'classification'
 
 const { DateTime } = require('luxon')
 
@@ -20,12 +20,16 @@ if (process.env.USE_SERVER_RECEIVED_DATE === 'true') {
   console.log('Global env USE_SERVER_RECEIVED_DATE activated')
 }
 
-const main = module.exports = async () => {
+const main = module.exports = async (dateParam) => {
   const { timezone } = config
 
+  const cacheName = `${DEFAULT_CACHE_NAME}_${Helpers.buildCacheName(dateParam, config)}`
+
+  console.log({ cacheName })
+
   const classificationCache = new ClassificationCache({
-    cacheId: (config.cacheName || DEFAULT_CACHE_NAME),
-    runtimeDate: buildRuntimeDate(config)
+    cacheId: cacheName,
+    runtimeDate: Helpers.buildRuntimeDate(dateParam, config)
   })
 
   const cacheData = classificationCache.data
@@ -89,6 +93,9 @@ const main = module.exports = async () => {
     let found = false
 
     if (messages.length > 0) {
+      //
+      // que pasa si hay mas de 1 con el mismo criterio ??
+      //
       for (const message of messages) {
         await message.getContent()
 
@@ -97,17 +104,24 @@ const main = module.exports = async () => {
 
         // ignore old messages
         if (mailDate > runtimeDate) {
-          found = true
+          if (mailDate < lowFilterDate && config.earlyArrivedException === true) {
+            // a partir del horario de inicio del proceso
+            // horario usual de llegada del correo
+            console.log('message arrived early. won\'t be processed')
+          } else {
+            // no importa si llega antes de tiempo.
+            found = true
 
-          const { state, severity } = indicatorState(mailDate, lowFilterDate, highFilterDate, criticalFilterDate)
+            const { state, severity } = indicatorState(mailDate, lowFilterDate, highFilterDate, criticalFilterDate)
 
-          cacheData[filterHash].data.solved = mailDate.toFormat('HH:mm')
-          cacheData[filterHash].data.result.state = state
-          cacheData[filterHash].data.result.severity = severity
-          cacheData[filterHash].processed = true
+            cacheData[filterHash].data.solved = mailDate.toFormat('HH:mm')
+            cacheData[filterHash].data.result.state = state
+            cacheData[filterHash].data.result.severity = severity
+            cacheData[filterHash].processed = true
 
-          await message.move()
-          classificationCache.setHashData(filterHash, cacheData[filterHash])
+            await message.move()
+            classificationCache.setHashData(filterHash, cacheData[filterHash])
+          }
         } else {
           console.log('Old message')
         }
@@ -375,25 +389,6 @@ const indicatorState = (date, lowFilterDate, highFilterDate, criticalFilterDate)
   return { state, severity }
 }
 
-/**
- *
- * @param {Object} config object with mailbot configuration properties
- * @prop {String} startOfDay HH:mm
- * @prop {String} timezone
- *
- * @return {Date} date object
- *
- */
-const buildRuntimeDate = ({ startOfDay, timezone }) => {
-  const runtimeDate = DateTime.now().setZone(timezone)
-
-  const hours = startOfDay.substring(0, 2)
-  const minutes = startOfDay.substring(3, 5)
-
-  const isoString = runtimeDate.set({ hours, minutes, seconds: 0 }).toISO()
-  return new Date(isoString)
-}
-
 if (require.main === module) {
-  main().then(console.log).catch(console.error)
+  main(process.argv[2]).then(console.log).catch(console.error)
 }

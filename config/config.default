@@ -1,5 +1,8 @@
 {
   "startOfDay": "00:00",
+  "useReceivedDate": false,
+  "ignoreMessageTimezone": false,
+  "earlyArrivedException": false,
   "imap": {
     "user": "",
     "password": "",

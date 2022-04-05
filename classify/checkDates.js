@@ -9,28 +9,13 @@ const getTimeArray = (time) => {
   }
 }
 
-const currentTime = DateTime.now().setZone(config.timezone)
-const currentDate = currentTime.startOf('day')
-const yesterdayDate = DateTime.now().setZone(config.timezone).plus({ days: -1 }).startOf('day')
-const timeArray = getTimeArray(config.startOfDay)
-const startTime = DateTime.now().setZone(config.timezone).set({ hour: timeArray.hour, minute: timeArray.min })
-
-const checkWeekend = () => {
+const checkWeekend = (def) => {
   console.log('checkWeekend')
-  const def = {
-    currentTime: currentTime.toISO(),
-    startTime: startTime.toISO(),
-    dayOfWeek: currentTime.weekdayLong,
-    startOfDay: {
-      time: config.startOfDay,
-      timeArray
-    }
-  }
 
-  console.log(def)
+  console.log(def.dayOfWeek)
 
   if (def.dayOfWeek === 'Saturday') {
-    if (currentTime >= startTime) {
+    if (def.currentTime >= def.startTime) {
       throw new Error('Weekend: Saturday')
     }
   }
@@ -40,43 +25,31 @@ const checkWeekend = () => {
   }
 
   if (def.dayOfWeek === 'Monday') {
-    if (currentTime <= startTime) {
+    if (def.currentTime <= def.startTime) {
       throw new Error('Weekend: Sunday')
     }
   }
 
-  console.log('Not a weekend')
+  console.log('Not a weekend day')
 }
 
-const checkHoliday = () => {
+const checkHoliday = (def) => {
   console.log('checkHoliday')
-
-  const def = {
-    currentTime: currentTime.toISO(),
-    startTime: startTime.toISO(),
-    dayOfWeek: currentTime.weekdayLong,
-    startOfDay: {
-      time: config.startOfDay,
-      timeArray
-    }
-  }
-
-  console.log(def)
 
   for (const holiday of holidays) {
     const holidayDate = DateTime.fromFormat(holiday, 'dd-MM-yyyy', { zone: config.timezone })
-    const holidayTime = holidayDate.set({ hour: timeArray.hour, minute: timeArray.min })
+    const holidayTime = holidayDate.set({ hour: def.startOfDay.timeArray.hour, minute: def.startOfDay.timeArray.min })
 
-    console.log({ holidayDate: holidayDate.toISO(), currentDate: currentDate.toISO(), yesterdayDate: yesterdayDate.toISO() })
+    console.log({ holidayDate: holidayDate.toISO(), currentDate: def.currentDate.toISO(), yesterdayDate: def.yesterdayDate.toISO() })
 
-    if (currentDate.equals(holidayDate)) {
-      if (currentTime > holidayTime) {
+    if (def.currentDate.equals(holidayDate)) {
+      if (def.currentTime >= holidayTime) {
         throw new Error(`Holiday: ${holiday}`)
       }
     }
 
-    if (yesterdayDate.equals(holidayDate)) {
-      if (currentTime < startTime) {
+    if (def.yesterdayDate.equals(holidayDate)) {
+      if (def.currentTime <= def.startTime) {
         throw new Error(`Holiday: ${holiday}`)
       }
     }
@@ -85,13 +58,52 @@ const checkHoliday = () => {
   console.log('Not a holiday')
 }
 
-const main = module.exports = async () => {
-  checkWeekend()
-  checkHoliday()
+const main = module.exports = async (datetime = null) => {
+  console.log({ datetime })
+
+  const isValidDateString = function (datestr) {
+    return (datestr && new Date(datestr).toString() !== 'Invalid Date')
+  }
+  const getCurrentTime = function (datestr) {
+    if (isValidDateString(datestr)) {
+      return DateTime.fromISO(datestr).setZone(config.timezone)
+    } else {
+      return DateTime.now().setZone(config.timezone)
+    }
+  }
+  const currentTime = getCurrentTime(datetime)
+  const timeArray = getTimeArray(config.startOfDay)
+
+  const def = {
+    currentTime,
+    currentDate: currentTime.startOf('day'),
+    yesterdayDate: currentTime.plus({ days: -1 }).startOf('day'),
+    startTime: currentTime.set({ hour: timeArray.hour, minute: timeArray.min }),
+    dayOfWeek: currentTime.weekdayLong,
+    startOfDay: {
+      time: config.startOfDay,
+      timeArray
+    }
+  }
+
+  console.log({
+    currentTime: def.currentTime.toISO(),
+    currentDate: def.currentDate.toISO(),
+    yesterdayDate: def.yesterdayDate.toISO(),
+    startTime: def.startTime.toISO(),
+    dayOfWeek: currentTime.weekdayLong,
+    startOfDay: {
+      time: config.startOfDay,
+      timeArray
+    }
+  })
+
+  checkWeekend(def)
+  checkHoliday(def)
 
   return { data: true }
 }
 
 if (require.main === module) {
-  main().then(console.log).catch(console.error)
+  main(process.argv[2]).then(console.log).catch(console.error)
 }

@@ -65,7 +65,7 @@ module.exports = {
       const processedFilters = []
       const failureFilters = []
 
-      for (let filterHash in cacheData) {
+      for (const filterHash in cacheData) {
         if (filterHash !== 'runtimeDate') {
           const filter = cacheData[filterHash]
           if (filter.processed) { // ya llego
@@ -84,7 +84,7 @@ module.exports = {
 
       if (failureFilters.length > 0) {
         state = 'failure'
-        for (let filter of failureFilters) {
+        for (const filter of failureFilters) {
           if (transformSeverity(severity) < transformSeverity(filter.data.result.severity)) {
             severity = filter.data.result.severity
           }
