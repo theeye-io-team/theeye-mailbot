@@ -112,7 +112,7 @@ const main = module.exports = async (dateParam) => {
             // no importa si llega antes de tiempo.
             found = true
 
-            const { state, severity } = indicatorState(mailDate, lowFilterDate, highFilterDate, criticalFilterDate)
+            const { state, severity } = Helpers.indicatorState(mailDate, lowFilterDate, highFilterDate, criticalFilterDate)
 
             cacheData[filterHash].data.solved = mailDate.toFormat('HH:mm')
             cacheData[filterHash].data.result.state = state
@@ -129,7 +129,7 @@ const main = module.exports = async (dateParam) => {
     }
 
     if (!found) {
-      const { state, severity } = indicatorState(currentDate, lowFilterDate, highFilterDate, criticalFilterDate)
+      const { state, severity } = Helpers.indicatorState(currentDate, lowFilterDate, highFilterDate, criticalFilterDate)
       let sentAlert = cacheData[filterHash].alert[severity]
 
       if (!sentAlert) {
@@ -144,50 +144,13 @@ const main = module.exports = async (dateParam) => {
     }
   }
 
-  const updateIndicators = () => {
-    const acls = getAcls()
-    if (!acls) { return }
-    const aclsAll = [].concat(acls.manager, acls.operator, acls.administrator)
-    const orderedCache = Helpers.orderCache(classificationCache, timezone, runtimeDate, config.startOfDay)
-
-    return Promise.all([
-      IndicatorHandler.handleProgressIndicator(orderedCache, aclsAll).catch(err => console.log(err)),
-      IndicatorHandler.handleSummaryIndicator(orderedCache, progressDetail = false, onlyWaiting = false, acls.administrator).catch(err => console.log(err)),
-      IndicatorHandler.handleSummaryIndicator(orderedCache, progressDetail = true, onlyWaiting = false, acls.operator).catch(err => console.log(err)),
-      IndicatorHandler.handleSummaryIndicator(orderedCache, progressDetail = true, onlyWaiting = true, acls.manager).catch(err => console.log(err)),
-      IndicatorHandler.handleStatusIndicator(orderedCache, acls.administrator).catch(err => console.log(err))
-    ])
-  }
-
-  await updateIndicators()
+  await IndicatorHandler.updateIndicators(classificationCache)
 
   await IndicatorHandler.orderIndicators('summary')
 
   await mailBot.closeConnection()
 
   return 'ok'
-}
-
-/**
- * Ensure acls are initialized and in correct format.
- * Else initialize
- */
-const getAcls = () => {
-  const acls = config?.acls
-  if (!acls) { return null }
-
-  const init = (key) => {
-    if (!Array.isArray(acls[key])) {
-      return []
-    }
-    return acls[key]
-  }
-
-  return {
-    manager: init('manager'),
-    operator: init('operator'),
-    administrator: init('administrator')
-  }
 }
 
 const getMessageDate = ({ message, filter, timezone }) => {
@@ -260,7 +223,7 @@ const setTimezone = (date, timezone) => {
  */
 
 const sendAlert = async (filter, state, severity) => {
-  const recipients = getAcls()
+  const recipients = Helpers.getAcls(config)
   if (!recipients) {
     console.log('Notification: no recipients defined')
     return true
@@ -337,56 +300,6 @@ const filterData = (filter) => {
       critical: false
     }
   }
-}
-
-/**
- *
- * @param {DateTime} currentDate
- * @param {DateTime} lowFilterDate
- * @param {DateTime} highFilterDate
- * @param {DateTime} criticalFilterDate
- * @returns {Object} {state, severity}
- */
-const indicatorState = (date, lowFilterDate, highFilterDate, criticalFilterDate) => {
-  let state, severity
-
-  if (lowFilterDate) {
-    if (date < lowFilterDate) {
-      state = 'normal'
-      severity = 'low'
-    }
-
-    if (date > lowFilterDate) {
-      state = 'failure'
-      severity = 'low'
-    }
-  }
-
-  if (highFilterDate) {
-    if (!lowFilterDate && date < highFilterDate) {
-      state = 'normal'
-      severity = 'low'
-    }
-
-    if (date > highFilterDate) {
-      state = 'failure'
-      severity = 'high'
-    }
-  }
-
-  if (criticalFilterDate) {
-    if (!lowFilterDate && !highFilterDate && date < criticalFilterDate) {
-      state = 'normal'
-      severity = 'low'
-    }
-
-    if (date > criticalFilterDate) {
-      state = 'failure'
-      severity = 'critical'
-    }
-  }
-
-  return { state, severity }
 }
 
 if (require.main === module) {
