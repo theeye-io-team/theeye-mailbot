@@ -1,6 +1,8 @@
 const { DateTime } = require('luxon')
 const config = require('../lib/config').decrypt()
-const holidays = require(process.env.HOLIDAYS || '../config/feriados.json')
+const Files = require('../lib/file')
+
+Files.access_token = config.api.accessToken
 
 const getTimeArray = (time) => {
   return {
@@ -33,8 +35,12 @@ const checkWeekend = (def) => {
   console.log('Not a weekend day')
 }
 
-const checkHoliday = (def) => {
+const checkHoliday = async (def) => {
   console.log('checkHoliday')
+
+  const holidays = await Files.Download({filename:config.feriados.filename || 'feriados.json'})
+
+  console.log(holidays)
 
   for (const holiday of holidays) {
     const holidayDate = DateTime.fromFormat(holiday, 'dd-MM-yyyy', { zone: config.timezone })
@@ -99,7 +105,7 @@ const main = module.exports = async (datetime = null) => {
   })
 
   checkWeekend(def)
-  checkHoliday(def)
+  await checkHoliday(def)
 
   return { data: true }
 }

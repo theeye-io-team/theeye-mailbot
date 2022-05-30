@@ -174,8 +174,7 @@ const handleSummaryIndicator = async (classificationData, progressDetail, onlyWa
   <table class="table" style="color:${tableBaseTextColor}">
     <thead>
       <tr>
-        <th style="background-color:${firstRowColor}">IndicatorTitle</th>
-        <th style="background-color:${firstRowColor}">IndicatorDescription</th>
+        <th style="background-color:${firstRowColor}">${config.indicator_column_titles.indicatorTitle || 'Description'}</th>
         <th style="background-color:${firstRowColor}">From</th>
         <th style="background-color:${firstRowColor}">Subject</th>
         <th style="background-color:${firstRowColor}">Body</th>
@@ -205,7 +204,6 @@ const handleSummaryIndicator = async (classificationData, progressDetail, onlyWa
       let filterValue = `
         <tr>
           <td style="background-color:${rowColor}">${filterData.indicatorTitle}</td>
-          <td style="background-color:${rowColor}">${filterData.indicatorDescription || ''}</td>
           <td style="background-color:${rowColor}">${filterData.from}</td>
           <td style="background-color:${rowColor}">${filterData.subject}</td>
           <td style="background-color:${rowColor}">${filterData.body}</td>
@@ -325,8 +323,7 @@ const handleStatusIndicator = async (classificationData, acl) => {
       <thead>
         <tr>
           <th style="background-color:${firstRowColor}">Estado</th>
-          <th style="background-color:${firstRowColor}">IndicatorTitle</th>
-          <th style="background-color:${firstRowColor}">IndicatorDescription</th>
+          <th style="background-color:${firstRowColor}">${config.indicator_column_titles.indicatorTitle || 'Description'}</th>
           <th style="background-color:${firstRowColor}">From</th>
           <th style="background-color:${firstRowColor}">Subject</th>
           <th style="background-color:${firstRowColor}">Body</th>
@@ -353,7 +350,6 @@ const handleStatusIndicator = async (classificationData, acl) => {
       <tr>
         <td style="background-color:${rowColor}">${status}</td>
         <td style="background-color:${rowColor}">${filterData.indicatorTitle}</td>
-        <td style="background-color:${rowColor}">${filterData.indicatorDescription || ''}</td>
         <td style="background-color:${rowColor}">${filterData.from}</td>
         <td style="background-color:${rowColor}">${filterData.subject}</td>
         <td style="background-color:${rowColor}">${filterData.body}</td>
