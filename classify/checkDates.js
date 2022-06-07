@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 const { DateTime } = require('luxon')
 const config = require('../lib/config').decrypt()
 const Files = require('../lib/file')
@@ -38,7 +40,8 @@ const checkWeekend = (def) => {
 const checkHoliday = async (def) => {
   console.log('checkHoliday')
 
-  const holidays = await Files.Download({filename:config.feriados.filename || 'feriados.json'})
+  const file = await Files.GetByFilename(config.feriados.filename || 'feriados.json')
+  const holidays = await Files.Download(file[0].id)
 
   console.log(holidays)
 

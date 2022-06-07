@@ -12,3 +12,4 @@ cache
 mailbot
 .env
 classify/orderIndicators.js
+deploy.file

@@ -14,30 +14,25 @@ const nodemailer = require('nodemailer')
 const filters = require('../../filters')
 
 const main = module.exports = async (dateParam) => {
-  const cacheName = `${DEFAULT_CACHE_NAME}_${Helpers.buildCacheName(dateParam, config)}`
-  console.log({ cacheName })
-
   const cache = new Cache({ cacheId: CACHE_NAME })
   const cacheData = cache.get()
 
-  const classificationCache = new ClassificationCache({
-    cacheId: cacheName,
-    runtimeDate: Helpers.buildRuntimeDate(dateParam, config)
-  })
-
-  const classifyCacheData = classificationCache.data
-  // console.log(classifyCacheData)
+  const classificationCache = new ClassificationCache({ config })
 
   const { timezone } = config
   const currentDate = DateTime.now().setZone(timezone)
-  const runtimeDate = DateTime.fromISO(new Date(classifyCacheData.runtimeDate).toISOString())
+  const runtimeDate = DateTime.fromISO(new Date(classificationCache.data.runtimeDate).toISOString())
   console.log(`runtime date is set to ${runtimeDate}`)
 
   for (const filter of filters) {
     const hash = createHash(JSON.stringify(filter))
     const thresholds = filter.thresholdTimes
-    const startDate =
-      Helpers.getFormattedThresholdDate(thresholds.start, timezone, runtimeDate, config.startOfDay)
+    const startDate = Helpers.getFormattedThresholdDate(
+      thresholds.start,
+      timezone,
+      runtimeDate,
+      config.startOfDay
+    )
 
     // console.log(startDate)
 

@@ -1,20 +1,19 @@
+require('dotenv').config()
 const config = require('../lib/config').decrypt()
 const Helpers = require('../lib/helpers')
 const IndicatorHandler = require('./indicatorHandler')
 const { DateTime } = require('luxon')
 const ClassificationCache = require('./cache')
 
-const DEFAULT_CACHE_NAME = process.env.DEFAULT_CACHE_NAME || 'classification'
-
 const main = module.exports = async (hash, date) => {
-  const cacheName = `${DEFAULT_CACHE_NAME}_${Helpers.buildCacheName(date, config)}`
 
-  console.log({ cacheName })
+  let jobUser = null
+  try {
+    jobUser = JSON.parse(process.env.THEEYE_JOB_USER)
+  } catch (err) {
+  }
 
-  const classificationCache = new ClassificationCache({
-    cacheId: cacheName,
-    runtimeDate: Helpers.buildRuntimeDate(date, config)
-  })
+  const classificationCache = new ClassificationCache({ date, config })
   
   const hashData = classificationCache.getHashData(hash)
   const resolveDate = DateTime.now().setZone(config.timezone)
@@ -30,8 +29,10 @@ const main = module.exports = async (hash, date) => {
   hashData.data.result.state = state
   hashData.data.result.severity = severity
   hashData.data.manuallyResolved = true
-  hashData.data.manuallyResolvedUser = JSON.parse(process.env.THEEYE_JOB_USER)?.username || null
-  classificationCache.setHashData(hash, hashData)
+  hashData.data.manuallyResolvedUser = (jobUser?.username || null)
+
+  classificationCache.replaceHashData(hash, hashData)
+
   await IndicatorHandler.updateIndicators(classificationCache)
   await IndicatorHandler.orderIndicators('summary')
   return true
