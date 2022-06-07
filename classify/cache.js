@@ -82,7 +82,11 @@ class ClassificationCache extends Cache {
    * replace only the filter's data
    */
   updateFilterData (hash, data) {
-    Object.assign(this.data[hash].data, updateDataMap(data))
+    if (!this.data[hash].data) {
+      console.error('cannot update data without initialization')
+    }
+
+    Object.assign(this.data[hash].data, mapFilterData(data))
     this.save(this.data)
     return this.data[hash]
   }
@@ -95,22 +99,13 @@ class ClassificationCache extends Cache {
  */
 const dataMap = (data) => {
   return {
-    data: {
-      indicatorTitle: data.indicatorTitle,
-      indicatorDescription: data.indicatorDescription,
-      from: data.from,
-      subject: data.subject,
-      body: data.body,
-      start: (data.thresholdTimes||data).start,
-      low: (data.thresholdTimes||data).low,
-      high: (data.thresholdTimes||data).high,
-      critical: (data.thresholdTimes||data).critical,
+    data: Object.assign(mapFilterData(data), {
       solved: '',
       result: {
         state: '',
         severity: ''
       }
-    },
+    }),
     processed: false,
     alert: {
       low: false,
@@ -120,8 +115,11 @@ const dataMap = (data) => {
   }
 }
 
-const updateDataMap = (data) => {
+const mapFilterData = (data) => {
   return {
+    id: data.id,
+    classifier: data.classifier,
+    fingerprint: data.fingerprint,
     indicatorTitle: data.indicatorTitle,
     indicatorDescription: data.indicatorDescription,
     from: data.from,

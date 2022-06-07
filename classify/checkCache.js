@@ -16,6 +16,7 @@ const main = module.exports = async (rulesFileEvent) => {
   // si no fue modificado , evitamos hacer el update del file en la api.
   // si modificamos el archivo permanentemente entra en loop
   const checked = []
+  const classifierFileId = rulesFileEvent.config.file
   let filtersChanged = false
   let cacheChanged = false
 
@@ -30,17 +31,18 @@ const main = module.exports = async (rulesFileEvent) => {
 
   for (let index = 0; index < currentFilters.length; index++) {
     const filter = currentFilters[index]
+
     // chequeo de cambios. cualquier cambio require actualizar los indicadores
     const fingerprint = classificationCache.createFilterFingerprint(filter)
 
     // si no tiene hash, se le asigna uno que coincide con el id que figura en la cache
-    if (!filter.id) {
+    if (!filter.id || !filter.fingerprint || !filter.classifier) {
       // se le agrega la info necesaria para el seguimiento de las reglas
-      filter.id = fingerprint 
-      filter.fingerprint = fingerprint
-      filter.enabled = true
-      filter.last_update = new Date()
-      filter.creation_date = new Date()
+      filter.id || (filter.id = fingerprint)
+      filter.fingerprint || (filter.fingerprint = fingerprint)
+      filter.classifier || (filter.classifier = classifierFileId)
+      filter.last_update || (filter.last_update = new Date())
+      filter.creation_date || (filter.creation_date = new Date())
       filtersChanged = true
       console.log(`filter [${index}] ${filter.id} was upgraded. id/hash added to filter`)
     }
@@ -50,15 +52,15 @@ const main = module.exports = async (rulesFileEvent) => {
     if (!inCacheFilter) {
       // es una regla nueva
       console.log(`filter [${index}] ${filter.id} is not present in cache.`)
+      // se agrega la regla a cache
       classificationCache.initHashData(filter.id, filter)
-      // no se hace mas nada. al correr el clasificador la regla se agrega
+      cacheChanged = true
     } else {
       if (filter.fingerprint !== fingerprint) {
         console.log(`filter [${index}] ${filter.id} fingerprint changed.`)
         filter.last_update = new Date()
         filter.fingerprint = fingerprint
         filtersChanged = true
-
         classificationCache.updateFilterData(filter.id, filter)
       }
     }
@@ -66,10 +68,13 @@ const main = module.exports = async (rulesFileEvent) => {
     checked.push(filter.id)
   }
 
+  //
   // check deleted rules
+  //
   for (let hash in classificationCache.data) {
     if (hash !== 'runtimeDate') {
-      if (checked.indexOf(hash) === -1) {
+      const cachedData = classificationCache.getHashData(hash)?.data
+      if (checked.indexOf(hash) === -1 && cachedData.classifier === classifierFileId) {
         console.log(`deleted rule ${hash}`)
         classificationCache.deleteHashData(hash)
         cacheChanged = true
@@ -79,7 +84,7 @@ const main = module.exports = async (rulesFileEvent) => {
 
   if (filtersChanged === true) {
     console.log('Local changes. File api upgrades required')
-    const file = await FileApi.GetById(rulesFileEvent.config.file)
+    const file = await FileApi.GetById(classifierFileId)
     file.content = JSON.stringify(currentFilters, null, 2)
     await file.upload()
   }
