@@ -1,0 +1,9 @@
+[
+    {
+        "from": "example@email.com",
+        "body": "msg body",
+        "subject": "msg subject",
+        "seen": "true|false",
+        "since": "isodate"
+    }
+]
