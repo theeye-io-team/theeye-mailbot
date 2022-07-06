@@ -15,7 +15,6 @@ const main = module.exports = async (attachments) => {
     uploadPromises.push(mailApi.checkExists(attachment_payload)
     .then(res => {
       if(/not found/i.test(res.body)) {
-        return 'ok'
         return mailApi.upload(attachment_payload, attachment_data)
       }
     })
