@@ -25,13 +25,13 @@ const moveMessage = (message, folder) => {
   return console.log(`Move messages disabled via config`)
 }
 
-const searchBodyAttachments = async (message, bodyParser) => {
+const searchBodyAttachments = async (text, bodyParser) => {
 
   const attachments = []
 
     if(bodyParser.url_patterns) {
       for(const urlPattern of bodyParser.url_patterns) {
-        const foundAttachments = message.data.text.match(new RegExp(urlPattern.pattern, urlPattern.flags))
+        const foundAttachments = text.match(new RegExp(urlPattern.pattern, urlPattern.flags))
 
         if(foundAttachments?.length) {
           for(const url of foundAttachments) {
@@ -82,7 +82,7 @@ const main = module.exports = async () => {
       }
 
       if(rule.body_parser) {
-        attachments = [...attachments, ...await searchBodyAttachments(message, rule.body_parser)]
+        attachments = [...attachments, ...await searchBodyAttachments(message.data.text, rule.body_parser)]
       }
       
       if (attachments.length > 0) {
