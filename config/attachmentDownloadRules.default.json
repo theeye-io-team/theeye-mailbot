@@ -1,0 +1,16 @@
+[
+    {
+        "search": {
+            "from": ""
+        },    
+        "attachments": {
+            "dispositions": ["inline", "attachment"],
+            "extensions": ["pdf", "tiff", "tif"],
+            "mime": ["pdf", "tiff", "tif"]
+        },
+        "body_parser": {
+            "url_patterns":[""],
+            "text_patterns":[""]
+        }
+    }
+]

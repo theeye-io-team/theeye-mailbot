@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 const EncConfig = require('../lib/config')
 const MailBot = require('../lib/mailbot')
 

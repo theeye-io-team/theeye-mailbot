@@ -1,7 +1,6 @@
 node_modules
 *.swp
 *.swo
-attachments
 
 config/mbsync.conf
 config/config.json
