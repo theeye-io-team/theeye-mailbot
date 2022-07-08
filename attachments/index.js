@@ -126,7 +126,7 @@ const main = module.exports = async () => {
               console.log(res.body)
               if(/not found/i.test(res.body)) {
                 console.log('could upload')
-                // return mailApi.upload(attachmentPayload, attachmentData)
+                return mailApi.upload(attachmentPayload, attachmentData)
               }
             })
           }
@@ -139,11 +139,10 @@ const main = module.exports = async () => {
     } catch(err) { // falla un adjunto, el mensaje entero se mueve a error
       console.log(err)
       await moveMessage(message, config.folders.error)
-    } 
+    }
     }
   }
   
-
   console.log('-----------------------------------------------------')
   console.log('cerrando conexión')
 
