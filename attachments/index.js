@@ -66,7 +66,11 @@ const main = module.exports = async () => {
   await mailBot.connect()
 
   for (const rule of attachmentDownloadRules) {
-    const messages = await mailBot.searchMessages(rule.search)
+    let messages = await mailBot.searchMessages(rule.search)
+
+    if(process.env.MAX_MESSAGES) {
+      messages = messages.slice(0, Number(process.env.MAX_MESSAGES))
+    }
 
     for (const message of messages) {
       await message.getContent()
