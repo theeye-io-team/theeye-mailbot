@@ -62,11 +62,15 @@ const searchBodyAttachments = async (text, bodyParser) => {
   return attachments
 }
 
-const main = module.exports = async () => {
+const main = module.exports = async (maxMessages) => {
   await mailBot.connect()
 
   for (const rule of attachmentDownloadRules) {
-    const messages = await mailBot.searchMessages(rule.search)
+    let messages = await mailBot.searchMessages(rule.search)
+
+    if(maxMessages) {
+      messages = messages.slice(0, Number(maxMessages))
+    }
 
     for (const message of messages) {
       await message.getContent()
@@ -162,5 +166,5 @@ const main = module.exports = async () => {
 }
 
 if (require.main === module) {
-  main().then(console.log).catch(console.error)
+  main(process.argv[2]).then(console.log).catch(console.error)
 }
