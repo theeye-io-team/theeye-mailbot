@@ -1,4 +1,5 @@
 require('dotenv').config()
+const fs = require('fs')
 
 const Helpers = require('../lib/helpers')
 const MailApi = require('../lib/api')
@@ -17,7 +18,7 @@ const main = async (filename, initialDate = null) => {
   const timestamp = date.getTime()
 
   const from = `test+${timestamp}@theeye.io`
-  const subject = `test#${timestamp}`
+  const subject = `test_${timestamp}`
 
   const hashMail = Helpers.createHash(`${from}${subject}${date.toISOString()}`)
 
@@ -33,10 +34,9 @@ const main = async (filename, initialDate = null) => {
   }
 
   console.log(payload)
-  const response = await client.upload(payload, filename)
-
-  return response
-
+  const response = await client.upload(payload, fs.readFileSync(filename))
+  const { body, statusCode } = response
+  return { body, statusCode }
 }
 
 main(process.argv[2], process.argv[3])
