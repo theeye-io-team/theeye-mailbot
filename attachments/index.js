@@ -72,7 +72,21 @@ const main = module.exports = async (maxMessages) => {
       messages = messages.slice(0, Number(maxMessages))
     }
 
-    for (const message of messages) {
+    await processMessages(rule, messages)
+
+  }
+
+  console.log('-----------------------------------------------------')
+  console.log('cerrando conexión')
+
+  await mailBot.closeConnection()
+}
+
+const processMessages = async (rule, messages) => {
+  for (const message of messages) {
+    const emailPayload = {}
+
+    try {
       await message.getContent()
 
       console.log('-----------------------------------------------------')
@@ -84,85 +98,82 @@ const main = module.exports = async (maxMessages) => {
       const mailDate = message.date
 
       const mailHash = Helpers.createHash(`${mailFrom}${mailSubject}${mailDate}`)
-      const dateFormatted = DateTime.fromJSDate(mailDate).toFormat(config.attachments.dateFormat)
 
-      const emailPayload = {
-        folder: config.folders.INBOX,
-        from: mailFrom,
-        subject: mailSubject,
-        reception_date: mailDate,
-        mail_hash: mailHash
+      emailPayload.folder = config.folders.INBOX,
+      emailPayload.from = mailFrom,
+      emailPayload.subject = mailSubject,
+      emailPayload.reception_date = mailDate,
+      emailPayload.mail_hash = mailHash
+
+      let attachments = []
+
+      if (rule.attachments) {
+        attachments = [...attachments, ...message.searchAttachments(rule.attachments)]
       }
 
-      try {
-        let attachments = []
+      if (rule.body_parser) {
+        attachments = [...attachments, ...await searchBodyAttachments(message.data.text, rule.body_parser)]
+      }
 
-        if (rule.attachments) {
-          attachments = [...attachments, ...message.searchAttachments(rule.attachments)]
-        }
-
-        if (rule.body_parser) {
-          attachments = [...attachments, ...await searchBodyAttachments(message.data.text, rule.body_parser)]
-        }
-
-        if (attachments.length > 0) {
-          for (const attachment of attachments) {
-            const attachmentData = attachment.content
-            const attachmentHash = Helpers.createHash(attachmentData)
-            const attachmentExt = path.extname(attachment.filename)
-            const attachmentRenamed = `${config.folders.INBOX}_${dateFormatted}_${mailHash}_${attachmentHash}${attachmentExt}`
-
-            const attachmentPayload = Object.assign(emailPayload, {
-              attachment_filename: attachment.filename,
-              attachment_hash: attachmentHash,
-              attachment_renamed: attachmentRenamed
-            })
-
-            try {
-
-              if (config.attachments.saveToDiskDir) {
-                const attachmentsPath = path.join(config.attachments.saveToDiskDir, dateFormatted, mailHash)
-
-                if (!fs.existsSync(attachmentsPath)) {
-                  console.log(`creating attachments download folder ${attachmentsPath}`)
-                  fs.mkdirSync(attachmentsPath, { recursive: true })
-                }
-
-                const attachmentPath = path.join(attachmentsPath, attachmentRenamed)
-                console.log(`saving attachment into ${attachmentPath}`)
-                fs.writeFileSync(attachmentPath, attachmentData)
-              }
-
-              attachmentPayload.lifecycle = 'success'
-
-              await sendToTaggerApi(attachmentPayload, attachmentData)
-            } catch (err) {
-              attachmentPayload.lifecycle = 'error'
-              attachmentPayload.lifecycle_error = err.message
-
-              await mailApi.upload(attachmentPayload)
-            }
-          }
-          await moveMessage(message, config.folders.processed)
-        } else { // no tiene adjuntos o son no procesables
-          throw new Error('El email no tiene adjuntos')
-        }
-      } catch (err) { // falla recuperacion de adjuntos, el mensaje entero se mueve a error
-        const errorPayload = Object.assign(emailPayload, {
-          lifecycle: 'attachment_error',
-          lifecycle_error: err.message
-        })
-
-        await mailApi.upload(errorPayload)
+      if (attachments.length > 0) {
+        await processAttachments(attachments, emailPayload)
+      } else {
+        await mailApi.upload(emailPayload)
         await moveMessage(message, config.folders.notProcessed)
       }
+
+      await moveMessage(message, config.folders.processed)
+    }
+
+    catch (err) {
+      emailPayload.lifecycle = 'message_error',
+      emailPayload.lifecycle_error = err.message
+
+      await mailApi.upload(emailPayload)
+      await moveMessage(message, config.folders.notProcessed)
     }
   }
+}
 
-  console.log('-----------------------------------------------------')
-  console.log('cerrando conexión')
+const processAttachments = async (attachments, emailPayload) => {
+  for (const attachment of attachments) {
+    const attachmentPayload = Object.assign({}, emailPayload)
 
-  await mailBot.closeConnection()
+    try {
+
+      const dateFormatted = DateTime.fromJSDate(emailPayload.reception_date).toFormat(config.attachments.dateFormat)
+      const attachmentData = attachment.content
+      const attachmentHash = Helpers.createHash(attachmentData)
+      const attachmentExt = path.extname(attachment.filename)
+      const attachmentRenamed = `${config.folders.INBOX}_${dateFormatted}_${emailPayload.mail_hash}_${attachmentHash}${attachmentExt}`
+
+      attachmentPayload.attachment_filename = attachment.filename
+      attachmentPayload.attachment_hash = attachmentHash
+      attachmentPayload.attachment_renamed = attachmentRenamed
+
+      if (config.attachments.saveToDiskDir) {
+        const attachmentsPath = path.join(config.attachments.saveToDiskDir, dateFormatted, emailPayload.mail_hash)
+
+        if (!fs.existsSync(attachmentsPath)) {
+          console.log(`creating attachments download folder ${attachmentsPath}`)
+          fs.mkdirSync(attachmentsPath, { recursive: true })
+        }
+
+        const attachmentPath = path.join(attachmentsPath, attachmentRenamed)
+
+        fs.writeFileSync(attachmentPath, attachmentData)
+      }
+
+      attachmentPayload.lifecycle = 'success'
+
+      await sendToTaggerApi(attachmentPayload, attachmentData)
+    } catch (err) {
+      attachmentPayload.lifecycle = 'attachment_error'
+      attachmentPayload.lifecycle_error = err.message
+
+      await mailApi.upload(attachmentPayload)
+    }
+  }
 }
 
 if (require.main === module) {
