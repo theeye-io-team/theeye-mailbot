@@ -19,8 +19,7 @@ const attachmentDownloadRules = require(process.env.DOWNLOAD_RULES_PATH)
 const moveMessage = (message, folder) => {
   if (config.moveProcessedMessages) {
     if (folder) {
-      console.log(`Moving message to ${folder}`)
-      return message.move()
+      return message.move(folder)
     }
     return console.log('Target folder not defined via config.')
   }
@@ -119,10 +118,7 @@ const processMessages = async (rule, messages) => {
         await processAttachments(attachments, emailPayload)
       } else {
         await mailApi.upload(emailPayload)
-        await moveMessage(message, config.folders.notProcessed)
       }
-
-      await moveMessage(message, config.folders.processed)
     }
 
     catch (err) {
@@ -132,6 +128,9 @@ const processMessages = async (rule, messages) => {
       await mailApi.upload(emailPayload)
       await moveMessage(message, config.folders.notProcessed)
     }
+
+    await moveMessage(message, config.folders.processed)
+
   }
 }
 
