@@ -16,20 +16,77 @@ if (!process.env.DOWNLOAD_RULES_PATH) {
 
 const attachmentDownloadRules = require(process.env.DOWNLOAD_RULES_PATH)
 
-const moveMessage = (message, folder) => {
-  if (config.moveProcessedMessages) {
-    if (folder) {
-      return message.move(folder)
+const main = module.exports = async (maxMessages) => {
+  await mailBot.connect()
+
+  for (const rule of attachmentDownloadRules) {
+    let messages = await mailBot.searchMessages(rule.search)
+
+    if (maxMessages) {
+      messages = messages.slice(0, Number(maxMessages))
     }
-    return console.log('Target folder not defined via config.')
+
+    await processMessages(rule, messages)
   }
-  return console.log('Move messages disabled via config')
+
+  console.log('-----------------------------------------------------')
+  console.log('cerrando conexión')
+
+  await mailBot.closeConnection()
 }
 
-const sendToTaggerApi = async (attachmentPayload, attachmentData) => {
-  const res = await mailApi.checkExists(attachmentPayload)
-  if (/not found/i.test(res.body)) {
-    return mailApi.upload(attachmentPayload, attachmentData)
+const processMessages = async (rule, messages) => {
+  for (let index = messages.length - 1; index >= 0; index--) {
+    const message = messages[index]
+    console.log('-----------------------------------------------------')
+    console.log(`procesando mensaje ${message.seq}`)
+
+    const emailPayload = {}
+    let mailHash
+
+    try {
+      await message.getContent()
+
+      // parse parts inside body
+      const mailFrom = message.from
+      const mailSubject = message.subject
+      const mailDate = message.date
+
+      mailHash = Helpers.createHash(`${mailFrom}${mailSubject}${mailDate}`)
+
+      emailPayload.folder = config.folders.INBOX,
+      emailPayload.from = mailFrom,
+      emailPayload.subject = mailSubject,
+      emailPayload.reception_date = mailDate,
+      emailPayload.mail_hash = mailHash
+
+      let attachments = []
+
+      if (rule.attachments) {
+        attachments = [...attachments, ...message.searchAttachments(rule.attachments)]
+      }
+
+      if (rule.body_parser) {
+        attachments = [...attachments, ...await searchBodyAttachments(message.data.text, rule.body_parser)]
+      }
+
+      if (attachments.length > 0) {
+        await processAttachments(attachments, emailPayload)
+      } else {
+        await mailApi.upload(emailPayload)
+      }
+      await message.move(config.folders.processed)
+    } catch (err) {
+      console.error(err)
+
+      if (mailHash) {
+        emailPayload.lifecycle = 'message_error'
+        emailPayload.lifecycle_error = err.message
+
+        await mailApi.upload(emailPayload)
+      }
+      await message.move(config.folders.notProcessed)
+    }
   }
 }
 
@@ -61,85 +118,12 @@ const searchBodyAttachments = async (text, bodyParser) => {
   return attachments
 }
 
-const main = module.exports = async (maxMessages) => {
-  await mailBot.connect()
-
-  for (const rule of attachmentDownloadRules) {
-    let messages = await mailBot.searchMessages(rule.search)
-
-    if(maxMessages) {
-      messages = messages.slice(0, Number(maxMessages))
-    }
-
-    await processMessages(rule, messages)
-
-  }
-
-  console.log('-----------------------------------------------------')
-  console.log('cerrando conexión')
-
-  await mailBot.closeConnection()
-}
-
-const processMessages = async (rule, messages) => {
-  for (const message of messages) {
-    const emailPayload = {}
-
-    try {
-      await message.getContent()
-
-      console.log('-----------------------------------------------------')
-      console.log('procesando nuevo mensaje')
-
-      // parse parts inside body
-      const mailFrom = message.from
-      const mailSubject = message.subject
-      const mailDate = message.date
-
-      const mailHash = Helpers.createHash(`${mailFrom}${mailSubject}${mailDate}`)
-
-      emailPayload.folder = config.folders.INBOX,
-      emailPayload.from = mailFrom,
-      emailPayload.subject = mailSubject,
-      emailPayload.reception_date = mailDate,
-      emailPayload.mail_hash = mailHash
-
-      let attachments = []
-
-      if (rule.attachments) {
-        attachments = [...attachments, ...message.searchAttachments(rule.attachments)]
-      }
-
-      if (rule.body_parser) {
-        attachments = [...attachments, ...await searchBodyAttachments(message.data.text, rule.body_parser)]
-      }
-
-      if (attachments.length > 0) {
-        await processAttachments(attachments, emailPayload)
-      } else {
-        await mailApi.upload(emailPayload)
-      }
-    }
-
-    catch (err) {
-      emailPayload.lifecycle = 'message_error',
-      emailPayload.lifecycle_error = err.message
-
-      await mailApi.upload(emailPayload)
-      await moveMessage(message, config.folders.notProcessed)
-    }
-
-    await moveMessage(message, config.folders.processed)
-
-  }
-}
-
 const processAttachments = async (attachments, emailPayload) => {
+  console.log(`processing ${attachments.length} attachments`)
   for (const attachment of attachments) {
     const attachmentPayload = Object.assign({}, emailPayload)
 
     try {
-
       const dateFormatted = DateTime.fromJSDate(emailPayload.reception_date).toFormat(config.attachments.dateFormat)
       const attachmentData = attachment.content
       const attachmentHash = Helpers.createHash(attachmentData)
@@ -164,14 +148,21 @@ const processAttachments = async (attachments, emailPayload) => {
       }
 
       attachmentPayload.lifecycle = 'success'
-
-      await sendToTaggerApi(attachmentPayload, attachmentData)
+      await uploadAttachment(attachmentPayload, attachmentData)
     } catch (err) {
       attachmentPayload.lifecycle = 'attachment_error'
       attachmentPayload.lifecycle_error = err.message
-
       await mailApi.upload(attachmentPayload)
     }
+  }
+}
+
+const uploadAttachment = async (attachmentPayload, attachmentData) => {
+  const res = await mailApi.checkExists(attachmentPayload)
+  if (/not found/i.test(res.body)) {
+    return mailApi.upload(attachmentPayload, attachmentData)
+  } else {
+    console.log('attachment already uploaded')
   }
 }
 
