@@ -1,4 +1,5 @@
 require('dotenv').config()
+const got = require('got')
 const config = require('../lib/config').decrypt()
 const fs = require('fs')
 const path = require('path')
@@ -7,7 +8,6 @@ const mailApi = new MailApi(config)
 const MailBot = require('../lib/mailbot')
 const mailBot = new MailBot(config)
 const Helpers = require('../lib/helpers')
-const Request = require('../lib/req')
 const { DateTime } = require('luxon')
 
 if (!process.env.DOWNLOAD_RULES_PATH) {
@@ -98,13 +98,20 @@ const searchBodyAttachments = async (text, bodyParser) => {
       const foundAttachments = text.match(new RegExp(urlPattern.pattern, urlPattern.flags))
 
       if (foundAttachments?.length) {
-        for (const url of foundAttachments) {
-          const options = {
-            url,
-            method: 'GET'
+        for (let url of foundAttachments) {
+          if (urlPattern.filters) {
+            url = urlPattern.filters.reduce( (url, filter) => {
+              if (filter.type == 'replace') {
+                const pattern = new RegExp(filter.pattern, filter.flags)
+                return url.replace(pattern, filter.replacement)
+              } else {
+                console.log('filter not implemented')
+                return url
+              }
+            }, url)
           }
 
-          const fileData = await Request(options)
+          const fileData = await got(url)
 
           attachments.push({
             filename: fileData.headers['content-disposition'].replace('attachment; filename=', ''),
