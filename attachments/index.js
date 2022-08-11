@@ -1,5 +1,4 @@
 require('dotenv').config()
-const got = require('got')
 const config = require('../lib/config').decrypt()
 const fs = require('fs')
 const path = require('path')
@@ -26,7 +25,7 @@ const main = module.exports = async (maxMessages) => {
       messages = messages.slice(0, Number(maxMessages))
     }
 
-    await processMessages(rule, messages)
+    await processMessagesAttachments(rule.downloads, messages)
   }
 
   console.log('-----------------------------------------------------')
@@ -35,7 +34,10 @@ const main = module.exports = async (maxMessages) => {
   await mailBot.closeConnection()
 }
 
-const processMessages = async (rule, messages) => {
+const processMessagesAttachments = async (downloads, messages) => {
+  if (!Array.isArray(downloads)) {
+    throw new Error('invalid downloads definition')
+  }
   for (let index = messages.length - 1; index >= 0; index--) {
     const message = messages[index]
     console.log('-----------------------------------------------------')
@@ -62,12 +64,19 @@ const processMessages = async (rule, messages) => {
 
       let attachments = []
 
-      if (rule.attachments) {
-        attachments = [...attachments, ...message.searchAttachments(rule.attachments)]
-      }
+      for (let index = 0; index < downloads.length; index++) {
+        const download = downloads[index]
 
-      if (rule.body_parser) {
-        attachments = [...attachments, ...await searchBodyAttachments(message.data.text, rule.body_parser)]
+        switch (download.type) {
+          case 'attachments':
+            attachments = [...attachments, ...message.searchAttachments(download)]
+            break;
+          case 'body_parser':
+            attachments = [...attachments, ...await message.searchBodyAttachments(download)]
+            break;
+          default:
+            break;
+        } 
       }
 
       if (attachments.length > 0) {
@@ -88,41 +97,6 @@ const processMessages = async (rule, messages) => {
       await message.move(config.folders.notProcessed)
     }
   }
-}
-
-const searchBodyAttachments = async (text, bodyParser) => {
-  const attachments = []
-
-  if (bodyParser.url_patterns) {
-    for (const urlPattern of bodyParser.url_patterns) {
-      const foundAttachments = text.match(new RegExp(urlPattern.pattern, urlPattern.flags))
-
-      if (foundAttachments?.length) {
-        for (let url of foundAttachments) {
-          if (urlPattern.filters) {
-            url = urlPattern.filters.reduce( (url, filter) => {
-              if (filter.type == 'replace') {
-                const pattern = new RegExp(filter.pattern, filter.flags)
-                return url.replace(pattern, filter.replacement)
-              } else {
-                console.log('filter not implemented')
-                return url
-              }
-            }, url)
-          }
-
-          const fileData = await got(url)
-
-          attachments.push({
-            filename: fileData.headers['content-disposition'].replace('attachment; filename=', ''),
-            content: Buffer.from(fileData.rawBody)
-          })
-        }
-      }
-    }
-  }
-
-  return attachments
 }
 
 const processAttachments = async (attachments, emailPayload) => {

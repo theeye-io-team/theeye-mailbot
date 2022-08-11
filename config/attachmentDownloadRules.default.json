@@ -1,16 +1,24 @@
 [
-    {
-        "search": {
-            "from": ""
-        },    
-        "attachments": {
-            "dispositions": ["inline", "attachment"],
-            "extensions": ["pdf", "tiff", "tif"],
-            "mime": ["pdf", "tiff", "tif"]
-        },
-        "body_parser": {
-            "url_patterns":[""],
-            "text_patterns":[""]
-        }
-    }
+  {
+    "search": {
+      "from": ""
+    },
+    "downloads": [
+      {
+        "type":"attachments",
+        "dispositions": ["inline", "attachment"],
+        "extensions": ["pdf", "tiff", "tif"],
+        "mime": ["pdf", "tiff", "tif"]
+      },
+      {
+        "type":"body_parser",
+        "url_patterns":[
+          {
+            "pattern":"(https:\/\/www\\.google\\.com\/...)",
+            "flags":"i"
+          }
+        ]
+      }
+    ]
+  }
 ]
