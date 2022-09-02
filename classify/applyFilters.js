@@ -2,6 +2,7 @@ const Helpers = require('../lib/helpers')
 const { DateTime } = require('luxon')
 const MailBot = require('../lib/mailbot')
 const TheEyeAlert = require('../lib/alert')
+const EscapedRegExp = require('../lib/escaped-regexp')
 
 const config = require('../lib/config').decrypt()
 
@@ -13,7 +14,7 @@ const main = module.exports = async (filters, classificationCache) => {
   console.log(`runtime date is set to ${runtimeDate}`)
   const mailBot = new MailBot(config)
   await mailBot.connect()
-  const currentDate = DateTime.now().setZone(timezone)
+  const currentDateTime = DateTime.now().setZone(timezone)
 
   for (const filter of filters) {
     console.log('-------------------')
@@ -49,7 +50,7 @@ const main = module.exports = async (filters, classificationCache) => {
       //
       // ignore rules not inprogress. skip early checks
       //
-      if (startFilterDate > currentDate) {
+      if (startFilterDate > currentDateTime) {
         console.log('Skip this rule. Not started yet')
         continue
       }
@@ -59,7 +60,8 @@ const main = module.exports = async (filters, classificationCache) => {
         DateTime.fromISO(
           Helpers.timeExpressionToDate(
             thresholds.start,
-            timezone
+            timezone,
+            runtimeDate
           ).toISOString()
         ).plus({ hours: -searchSinceModifier })
       ).toISOString()
@@ -75,37 +77,52 @@ const main = module.exports = async (filters, classificationCache) => {
         for (const message of messages) {
           await message.getContent()
 
-          const mailDate = getMessageDate({ message, filter, timezone })
-          console.log(`mail date is ${mailDate}`)
-
-          // ignore old messages
-          if (mailDate > runtimeDate) {
-            if (mailDate < lowFilterDate && config.earlyArrivedException === true) {
-              // a partir del horario de inicio del proceso
-              // horario usual de llegada del correo
-              console.log('message arrived early. won\'t be processed')
-            } else {
-              // no importa si llega antes de tiempo.
-              found = true
-
-              const { state, severity } = Helpers.indicatorState(mailDate, lowFilterDate, highFilterDate, criticalFilterDate)
-
-              filterCacheData.data.solved = mailDate.toFormat('HH:mm')
-              filterCacheData.data.result.state = state
-              filterCacheData.data.result.severity = severity
-              filterCacheData.processed = true
-
-              await message.move()
-              classificationCache.replaceHashData(filterHash, filterCacheData)
+          let bodyMatched
+          let bodyText
+          if (process.env.USE_IMAP_BODY_FILTER === "false") {
+            if (filter.body) {
+              bodyText = message.body.split(/[\n\s]/).join(' ')
+              // filter by hand
+              const pattern = new EscapedRegExp(filter.body.trim())
+              bodyMatched = pattern.test(bodyText)
             }
+          }
+
+          if (bodyMatched === false) {
+            console.log(`body not matched\n>> message body:\n${bodyText}\n>> search body:\n${filter.body}`)
           } else {
-            console.log('Old message')
+            const mailDate = getMessageDate({ message, filter, timezone })
+            console.log(`mail date is ${mailDate}`)
+
+            // ignore old messages
+            if (mailDate > runtimeDate) {
+              if (mailDate < lowFilterDate && config.earlyArrivedException === true) {
+                // a partir del horario de inicio del proceso
+                // horario usual de llegada del correo
+                console.log('message arrived early. won\'t be processed')
+              } else {
+                // no importa si llega antes de tiempo.
+                found = true
+
+                const { state, severity } = Helpers.indicatorState(mailDate, lowFilterDate, highFilterDate, criticalFilterDate)
+
+                filterCacheData.data.solved = mailDate.toFormat('HH:mm')
+                filterCacheData.data.result.state = state
+                filterCacheData.data.result.severity = severity
+                filterCacheData.processed = true
+
+                await message.move()
+                classificationCache.replaceHashData(filterHash, filterCacheData)
+              }
+            } else {
+              console.log('Old message')
+            }
           }
         }
       }
 
       if (!found) {
-        const { state, severity } = Helpers.indicatorState(currentDate, lowFilterDate, highFilterDate, criticalFilterDate)
+        const { state, severity } = Helpers.indicatorState(currentDateTime, lowFilterDate, highFilterDate, criticalFilterDate)
         let sentAlert = filterCacheData.alert[severity]
 
         if (!sentAlert) {

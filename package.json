@@ -21,7 +21,7 @@
     "form-data": "~3.0.0",
     "got": "^11.8.1",
     "imap-simple": "~5.0.0",
-    "imapflow": "~1.0.100",
+    "imapflow": "~1.0.107",
     "luxon": "~1.26.0",
     "mailparser": "~3.4.0",
     "qs": "~6.9.6",

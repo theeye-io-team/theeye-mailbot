@@ -7,13 +7,13 @@
 ```
 
 
-exports THEEYE_ORGANIZATION_NAME='"customer"'
+export THEEYE_ORGANIZATION_NAME='"customer"'
 
-exports THEEYE_API_URL='"https://supervisor.theeye.io"'
+export THEEYE_API_URL='"https://supervisor.theeye.io"'
 
-exports CONFIG_FILE_PATH=${PWD}/config/config.json
+export CONFIG_FILE_PATH=${PWD}/config/config.json
 
-exports CLASSIFICATION_RULEZ_PATH=${PWD}/config/classificationRulez.json
+export CLASSIFICATION_RULEZ_PATH=${PWD}/config/classificationRulez.json
 
 node index.js
 
