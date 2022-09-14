@@ -69,7 +69,7 @@ const processMessagesAttachments = async (downloads, messages) => {
 
         switch (download.type) {
           case 'attachments':
-            attachments = [...attachments, ...message.searchAttachments(download)]
+            attachments = [...attachments, ...await message.searchAttachments(download)]
             break;
           case 'body_parser':
             attachments = [...attachments, ...await message.searchBodyAttachments(download)]
