@@ -12,3 +12,4 @@ mailbot
 .env
 classify/orderIndicators.js
 deploy.file
+attachments/

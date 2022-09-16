@@ -24,6 +24,8 @@
     "imapflow": "~1.0.107",
     "luxon": "~1.26.0",
     "mailparser": "~3.4.0",
+    "mime-type": "~4.0.0",
+    "node-tnef": "~1.4.0",
     "qs": "~6.9.6",
     "rfc2047": "^3.0.1",
     "theeye-bot-sdk": "git+https://github.com/theeye-io/theeye-bot-sdk.git"

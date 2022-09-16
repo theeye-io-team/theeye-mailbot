@@ -69,7 +69,7 @@ const processMessagesAttachments = async (downloads, messages) => {
 
         switch (download.type) {
           case 'attachments':
-            attachments = [...attachments, ...message.searchAttachments(download)]
+            attachments = [...attachments, ...await message.searchAttachments(download)]
             break;
           case 'body_parser':
             attachments = [...attachments, ...await message.searchBodyAttachments(download)]
@@ -131,6 +131,7 @@ const processAttachments = async (attachments, emailPayload) => {
       attachmentPayload.lifecycle = 'success'
       await uploadAttachment(attachmentPayload, attachmentData)
     } catch (err) {
+      console.error(err)
       attachmentPayload.lifecycle = 'attachment_error'
       attachmentPayload.lifecycle_error = err.message
       await mailApi.upload(attachmentPayload)
