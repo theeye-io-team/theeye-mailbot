@@ -129,7 +129,7 @@ const processAttachments = async (attachments, emailPayload) => {
       }
 
       attachmentPayload.lifecycle = 'success'
-      //await uploadAttachment(attachmentPayload, attachmentData)
+      await uploadAttachment(attachmentPayload, attachmentData)
     } catch (err) {
       console.error(err)
       attachmentPayload.lifecycle = 'attachment_error'
