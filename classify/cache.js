@@ -118,6 +118,8 @@ const dataMap = (data) => {
 const mapFilterData = (data) => {
   return {
     id: data.id,
+    sla: data.sla,
+    informeDiario: data.informeDiario,
     classifier: data.classifier,
     fingerprint: data.fingerprint,
     indicatorTitle: data.indicatorTitle,
