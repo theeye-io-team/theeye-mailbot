@@ -70,6 +70,7 @@ module.exports = {
     indicator.accessToken = input.access_token
 
     // length -1 , descuenta 1 por el runtimeDate que esta en cache
+    // progress === amount of solved rules
     indicator.value = Math.round(progress * 100 / (Object.keys(input.cacheData).length - 1))
     indicator.state = state
     indicator.severity = severity
@@ -93,35 +94,48 @@ module.exports = {
 
   progressIndicatorData (cacheData) {
     const processedFilters = []
-    const failureFilters = []
+    //const failureFilters = []
+    const delayedRules = []
+
+    let progress = 0
 
     for (const filterHash in cacheData) {
       if (filterHash !== 'runtimeDate') {
         const filter = cacheData[filterHash]
-        if (filter.processed) { // ya llego
-          processedFilters.push(filter)
+        if (filter.solved) {
+          progress++
         } else {
-          // si tiene state y severidad , esta fallando.
-          if (filter.data.result.state === 'failure') {
-            failureFilters.push(filter)
-          }
+          delayedRules.push(filter)
         }
+
+        //if (filter.processed) { // ya llego
+        //  processedFilters.push(filter)
+        //} else {
+        //  // si tiene state y severidad , esta fallando.
+        //  if (filter.data.result.state === 'failure') {
+        //    failureFilters.push(filter)
+        //  }
+        //}
       }
     }
 
     let state = 'normal'
     let severity = 'low'
 
-    if (failureFilters.length > 0) {
+    if (delayedRules.length > 0) {
       state = 'failure'
-      for (const filter of failureFilters) {
-        if (this.transformSeverity(severity) < this.transformSeverity(filter.data.result.severity)) {
+      for (const filter of delayedRules) {
+        if (
+          this.transformSeverity(severity) <
+          this.transformSeverity(filter.data.result.severity)
+        ) {
+          // set the new global severity
           severity = filter.data.result.severity
         }
       }
     }
 
-    const progress = failureFilters.length + processedFilters.length
+    //const progress = failureFilters.length + processedFilters.length
 
     return { state, severity, progress }
   },
