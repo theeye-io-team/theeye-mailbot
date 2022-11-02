@@ -80,18 +80,6 @@ module.exports = {
     return indicator.put()
   },
   
-  prepareIndicatorTitle (text, runtimeDate) {
-    let parsedTit = text
-    if (/%DATE%/.test(parsedTit) === true) {
-      const formattedDate = DateTime
-        .fromJSDate(new Date(runtimeDate))
-        .toFormat('dd-MM-yyyy')
-
-      parsedTit = parsedTit.replace(/%DATE%/, formattedDate)
-    }
-    return parsedTit
-  },
-
   progressIndicatorData (cacheData) {
     const processedFilters = []
     //const failureFilters = []
@@ -102,7 +90,7 @@ module.exports = {
     for (const filterHash in cacheData) {
       if (filterHash !== 'runtimeDate') {
         const filter = cacheData[filterHash]
-        if (filter.solved) {
+        if (filter.data.solved || filter.processed === true) {
           progress++
         } else {
           delayedRules.push(filter)
@@ -138,6 +126,18 @@ module.exports = {
     //const progress = failureFilters.length + processedFilters.length
 
     return { state, severity, progress }
+  },
+
+  prepareIndicatorTitle (text, runtimeDate) {
+    let parsedTit = text
+    if (/%DATE%/.test(parsedTit) === true) {
+      const formattedDate = DateTime
+        .fromJSDate(new Date(runtimeDate))
+        .toFormat('dd-MM-yyyy')
+
+      parsedTit = parsedTit.replace(/%DATE%/, formattedDate)
+    }
+    return parsedTit
   },
 
   /**

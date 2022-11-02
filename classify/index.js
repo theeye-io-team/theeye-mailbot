@@ -17,10 +17,6 @@ if (process.env.USE_SERVER_RECEIVED_DATE === 'true') {
 
 const main = module.exports = async (date) => {
 
-  if (!date) {
-    date = new Date().toISOString()
-  }
-
   const classificationCache = new ClassificationCache({ date, config })
   await ApplyFilters(filters, classificationCache)
 

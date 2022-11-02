@@ -75,48 +75,52 @@ const main = module.exports = async (filters, classificationCache) => {
         // que pasa si hay mas de 1 con el mismo criterio ??
         //
         for (const message of messages) {
-          await message.getContent()
+          try {
+            await message.getContent()
 
-          let bodyMatched
-          let bodyText
-          if (process.env.USE_IMAP_BODY_FILTER === "false") {
-            if (filter.body) {
-              bodyText = message.body.split(/[\n\s]/).join(' ')
-              // filter by hand
-              const pattern = new EscapedRegExp(filter.body.trim())
-              bodyMatched = pattern.test(bodyText)
-            }
-          }
-
-          if (bodyMatched === false) {
-            console.log(`body not matched\n>> message body:\n${bodyText}\n>> search body:\n${filter.body}`)
-          } else {
-            const mailDate = getMessageDate({ message, filter, timezone })
-            console.log(`mail date is ${mailDate}`)
-
-            // ignore old messages
-            if (mailDate > runtimeDate) {
-              if (mailDate < lowFilterDate && config.earlyArrivedException === true) {
-                // a partir del horario de inicio del proceso
-                // horario usual de llegada del correo
-                console.log('message arrived early. won\'t be processed')
-              } else {
-                // no importa si llega antes de tiempo.
-                found = true
-
-                const { state, severity } = Helpers.indicatorState(mailDate, lowFilterDate, highFilterDate, criticalFilterDate)
-
-                filterCacheData.data.solved = mailDate.toFormat('HH:mm')
-                filterCacheData.data.result.state = state
-                filterCacheData.data.result.severity = severity
-                filterCacheData.processed = true
-
-                await message.move()
-                classificationCache.replaceHashData(filterHash, filterCacheData)
+            let bodyMatched
+            let bodyText
+            if (process.env.USE_IMAP_BODY_FILTER === "false") {
+              if (filter.body) {
+                bodyText = message.body.split(/[\n\s]/).join(' ')
+                // filter by hand
+                const pattern = new EscapedRegExp(filter.body.trim())
+                bodyMatched = pattern.test(bodyText)
               }
-            } else {
-              console.log('Old message')
             }
+
+            if (bodyMatched === false) {
+              console.log(`body not matched\n>> message body:\n${bodyText}\n>> search body:\n${filter.body}`)
+            } else {
+              const mailDate = getMessageDate({ message, filter, timezone })
+              console.log(`mail date is ${mailDate}`)
+
+              // ignore old messages
+              if (mailDate > runtimeDate) {
+                if (mailDate < lowFilterDate && config.earlyArrivedException === true) {
+                  // a partir del horario de inicio del proceso
+                  // horario usual de llegada del correo
+                  console.log('message arrived early. won\'t be processed')
+                } else {
+                  // no importa si llega antes de tiempo.
+                  found = true
+
+                  const { state, severity } = Helpers.indicatorState(mailDate, lowFilterDate, highFilterDate, criticalFilterDate)
+
+                  filterCacheData.data.solved = mailDate.toFormat('HH:mm')
+                  filterCacheData.data.result.state = state
+                  filterCacheData.data.result.severity = severity
+                  filterCacheData.processed = true
+
+                  await message.move()
+                  classificationCache.replaceHashData(filterHash, filterCacheData)
+                }
+              } else {
+                console.log('Old message')
+              }
+            }
+          } catch (err) {
+            console.error(err)
           }
         }
       }
