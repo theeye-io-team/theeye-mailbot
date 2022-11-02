@@ -27,7 +27,9 @@ class ClassificationCache extends Cache {
   }
 
   isAlreadyProcessed (hash) {
-    return this.data[hash].processed === true
+    //return this.data[hash].processed === true
+    const solved = this.data[hash].data.solved
+    return (solved && solved !== "")
   }
 
   createHash (string) {
@@ -106,7 +108,7 @@ const dataMap = (data) => {
         severity: ''
       }
     }),
-    processed: false,
+    //processed: false,
     alert: {
       low: false,
       high: false,

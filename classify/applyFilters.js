@@ -110,7 +110,7 @@ const main = module.exports = async (filters, classificationCache) => {
                   filterCacheData.data.solved = mailDate.toFormat('HH:mm')
                   filterCacheData.data.result.state = state
                   filterCacheData.data.result.severity = severity
-                  filterCacheData.processed = true
+                  //filterCacheData.processed = true
 
                   await message.move()
                   classificationCache.replaceHashData(filterHash, filterCacheData)
@@ -126,9 +126,14 @@ const main = module.exports = async (filters, classificationCache) => {
       }
 
       if (!found) {
-        const { state, severity } = Helpers.indicatorState(currentDateTime, lowFilterDate, highFilterDate, criticalFilterDate)
-        let sentAlert = filterCacheData.alert[severity]
+        const { state, severity } = Helpers.indicatorState(
+          currentDateTime,
+          lowFilterDate,
+          highFilterDate,
+          criticalFilterDate
+        )
 
+        let sentAlert = filterCacheData.alert[severity]
         if (!sentAlert) {
           sentAlert = await sendAlert(filterCacheData, state, severity)
           filterCacheData.alert[severity] = sentAlert

@@ -81,34 +81,25 @@ module.exports = {
   },
   
   progressIndicatorData (cacheData) {
-    const processedFilters = []
-    //const failureFilters = []
     const delayedRules = []
 
     let progress = 0
+    let state = 'normal'
+    let severity = 'low'
 
     for (const filterHash in cacheData) {
       if (filterHash !== 'runtimeDate') {
         const filter = cacheData[filterHash]
-        if (filter.data.solved || filter.processed === true) {
+        if (filter.data.solved) {
           progress++
         } else {
-          delayedRules.push(filter)
+          // si tiene state y severidad , esta fallando.
+          if (filter.data.result.state === 'failure') {
+            delayedRules.push(filter)
+          }
         }
-
-        //if (filter.processed) { // ya llego
-        //  processedFilters.push(filter)
-        //} else {
-        //  // si tiene state y severidad , esta fallando.
-        //  if (filter.data.result.state === 'failure') {
-        //    failureFilters.push(filter)
-        //  }
-        //}
       }
     }
-
-    let state = 'normal'
-    let severity = 'low'
 
     if (delayedRules.length > 0) {
       state = 'failure'
@@ -122,8 +113,6 @@ module.exports = {
         }
       }
     }
-
-    //const progress = failureFilters.length + processedFilters.length
 
     return { state, severity, progress }
   },
