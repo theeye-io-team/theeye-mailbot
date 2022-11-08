@@ -27,15 +27,12 @@ const main = module.exports = async () => {
   const indicators = JSON.parse(resp.body)
 
   for (const data of indicators) {
-    if (data.tags.indexOf('summary') !== -1) {
-      const indicatorDate = getDate(data.creation_date)
-      const diffInDays = getDiffInDays(indicatorDate)
+    const indicatorDate = getDate(data.creation_date)
+    const diffInDays = getDiffInDays(indicatorDate)
 
-      if (diffInDays > maxDiff) {
-        const indicator = new TheEyeIndicator(data.title, data.type)
-        indicator.accessToken = TheEyeIndicator.accessToken
-        await indicator.remove()
-      }
+    if (diffInDays > maxDiff) {
+      const indicator = new TheEyeIndicator(data.title, data.type)
+      await indicator.remove()
     }
   }
 }
