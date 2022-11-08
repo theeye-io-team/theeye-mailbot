@@ -55,6 +55,18 @@ const main = module.exports = async (filters, classificationCache) => {
         continue
       }
 
+      let searchCriteria
+      if (filter.search) {
+        searchCriteria = filter.search
+      } else {
+        searchCriteria = {
+          from: filter.from,
+          subject: filter.subject,
+          seen: filter.seen,
+          body: filter.body
+        }
+      }
+
       const searchSinceModifier = (config.searchSince || 12)
       const since = new Date(
         DateTime.fromISO(
@@ -66,7 +78,9 @@ const main = module.exports = async (filters, classificationCache) => {
         ).plus({ hours: -searchSinceModifier })
       ).toISOString()
 
-      const messages = await mailBot.searchMessages(Object.assign({}, filter, { since }))
+      searchCriteria.since = since
+
+      const messages = await mailBot.searchMessages(searchCriteria)
 
       let found = false
 

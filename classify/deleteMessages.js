@@ -10,11 +10,6 @@ const main = module.exports = async () => {
   const currentDate = DateTime.now().setZone(config.timezone)
   console.log(`CurrentDate: ${currentDate.toFormat('dd MMMM, yyyy')}`)
 
-  // Filter
-  // The order of the filter must be consistent with the order in the config file
-  // const searchCriteria = mailBot.buildSearchCriteria([`${filter.from}`,`${filter.subject}`,`${filter.body}`])
-  // const messages = await mailBot.searchMessages(searchCriteria)
-
   // No filter, will get everything
   const messages = await mailBot.searchMessages(['ALL'])
 
