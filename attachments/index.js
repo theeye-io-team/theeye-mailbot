@@ -81,10 +81,11 @@ const processMessagesAttachments = async (downloads, messages) => {
 
       if (attachments.length > 0) {
         await processAttachments(attachments, emailPayload)
+        await message.move(config.folders.processed)
       } else {
         await mailApi.upload(emailPayload)
+        await message.move(config.folders.notProcessed || config.folders.processed)
       }
-      await message.move(config.folders.processed)
     } catch (err) {
       console.error(err)
 
