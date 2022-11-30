@@ -1,5 +1,4 @@
 
-
 if [ -z "${1+x}" ];
 then
   name=`basename "$0"`
@@ -15,7 +14,7 @@ cd ..
 
 filename="theeye-mailbot-$(date +'%Y%m%d').tgz"
 
-tar -czf "${filename}" theeye-mailbot-classify/
+tar -czf "${filename}" theeye-mailbot/
 
 aws s3 cp "${filename}" "s3://${bucket}/${filename}" --acl public-read
 
