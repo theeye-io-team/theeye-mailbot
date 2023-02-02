@@ -146,6 +146,9 @@ const uploadAttachment = async (attachmentPayload, attachmentData) => {
     return mailApi.upload(attachmentPayload, attachmentData)
   } else {
     console.log('attachment already uploaded')
+
+    console.log(attachmentPayload)
+    console.log(res.body)
   }
 }
 
