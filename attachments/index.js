@@ -1,4 +1,5 @@
 require('dotenv').config()
+
 const config = require('../lib/config').decrypt()
 const fs = require('fs')
 const path = require('path')
@@ -10,7 +11,7 @@ const Helpers = require('../lib/helpers')
 const { DateTime } = require('luxon')
 
 if (!process.env.DOWNLOAD_RULES_PATH) {
-  throw new Error('env process.env.CLASSIFICATION_RULEZ_PATH not defined.')
+  throw new Error('env process.env.DOWNLOAD_RULES_PATH not defined.')
 }
 
 const attachmentDownloadRules = require(process.env.DOWNLOAD_RULES_PATH)
