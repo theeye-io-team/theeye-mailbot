@@ -18,6 +18,7 @@ const attachmentDownloadRules = require(process.env.DOWNLOAD_RULES_PATH)
 
 const main = module.exports = async (maxMessages) => {
   await mailBot.connect()
+  console.log('connected')
 
   for (const rule of attachmentDownloadRules) {
     let messages = await mailBot.searchMessages(rule.search)
@@ -88,15 +89,19 @@ const processMessagesAttachments = async (downloads, messages) => {
         await message.move(config.folders.notProcessed || config.folders.processed)
       }
     } catch (err) {
-      console.error(err)
+      console.error(err.message)
+      try {
+        if (mailHash) {
+          emailPayload.lifecycle = 'message_error'
+          emailPayload.lifecycle_error = err.message
 
-      if (mailHash) {
-        emailPayload.lifecycle = 'message_error'
-        emailPayload.lifecycle_error = err.message
-
-        await mailApi.upload(emailPayload)
+          await mailApi.upload(emailPayload)
+        }
+        await message.move(config.folders.notProcessed)
+      } catch (err) {
+        console.error('unable to update mail api')
+        console.error(err.message)
       }
-      await message.move(config.folders.notProcessed)
     }
   }
 }
@@ -133,7 +138,7 @@ const processAttachments = async (attachments, emailPayload) => {
       attachmentPayload.lifecycle = 'success'
       await uploadAttachment(attachmentPayload, attachmentData)
     } catch (err) {
-      console.error(err)
+      console.error(err.message)
       attachmentPayload.lifecycle = 'attachment_error'
       attachmentPayload.lifecycle_error = err.message
       await mailApi.upload(attachmentPayload)
