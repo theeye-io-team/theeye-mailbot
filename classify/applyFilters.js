@@ -1,5 +1,5 @@
-const Helpers = require('../lib/helpers')
 const { DateTime } = require('luxon')
+const Helpers = require('../lib/helpers')
 const MailBot = require('../lib/mailbot')
 const TheEyeAlert = require('../lib/alert')
 const EscapedRegExp = require('../lib/escaped-regexp')
