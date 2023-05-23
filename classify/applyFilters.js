@@ -14,7 +14,16 @@ const main = module.exports = async (filters, classificationCache) => {
   console.log(`runtime date is set to ${runtimeDate}`)
   const mailBot = new MailBot(config)
   await mailBot.connect()
-  const currentDateTime = DateTime.now().setZone(timezone)
+
+  let currentDateTime
+  if (process.env.CLASSIFICATION_CURRENT_ISODATE) {
+    console.log('using CLASSIFICATION_CURRENT_ISODATE')
+    currentDateTime = DateTime
+      .fromISO(process.env.CLASSIFICATION_CURRENT_ISODATE)
+      .setZone(timezone)
+  } else {
+    currentDateTime = DateTime.now().setZone(timezone)
+  }
 
   for (const filter of filters) {
     console.log('-------------------')

@@ -6,6 +6,54 @@ const Files = require('../lib/file')
 
 Files.access_token = config.api.accessToken
 
+const main = module.exports = async (datetime = null) => {
+  console.log({ datetime })
+
+  const currentTime = getCurrentTime(datetime)
+  const timeArray = getTimeArray(config.startOfDay)
+
+  const def = {
+    currentTime,
+    currentDate: currentTime.startOf('day'),
+    yesterdayDate: currentTime.plus({ days: -1 }).startOf('day'),
+    startTime: currentTime.set({ hour: timeArray.hour, minute: timeArray.min }),
+    dayOfWeek: currentTime.weekdayLong,
+    startOfDay: {
+      time: config.startOfDay,
+      timeArray
+    }
+  }
+
+  console.log({
+    currentTime: def.currentTime.toISO(),
+    currentDate: def.currentDate.toISO(),
+    yesterdayDate: def.yesterdayDate.toISO(),
+    startTime: def.startTime.toISO(),
+    dayOfWeek: currentTime.weekdayLong,
+    startOfDay: {
+      time: config.startOfDay,
+      timeArray
+    }
+  })
+
+  checkWeekend(def)
+  await checkHoliday(def)
+
+  return { data: true }
+}
+
+const getCurrentTime = (datestr) => {
+  if (isValidDateString(datestr)) {
+    return DateTime.fromISO(datestr).setZone(config.timezone)
+  } else {
+    return DateTime.now().setZone(config.timezone)
+  }
+}
+
+const isValidDateString = (datestr) => {
+  return (datestr && new Date(datestr).toString() !== 'Invalid Date')
+}
+
 const getTimeArray = (time) => {
   return {
     hour: Number(time.substring(0, 2)),
@@ -65,52 +113,6 @@ const checkHoliday = async (def) => {
   }
 
   console.log('Not a holiday')
-}
-
-const main = module.exports = async (datetime = null) => {
-  console.log({ datetime })
-
-  const isValidDateString = function (datestr) {
-    return (datestr && new Date(datestr).toString() !== 'Invalid Date')
-  }
-  const getCurrentTime = function (datestr) {
-    if (isValidDateString(datestr)) {
-      return DateTime.fromISO(datestr).setZone(config.timezone)
-    } else {
-      return DateTime.now().setZone(config.timezone)
-    }
-  }
-  const currentTime = getCurrentTime(datetime)
-  const timeArray = getTimeArray(config.startOfDay)
-
-  const def = {
-    currentTime,
-    currentDate: currentTime.startOf('day'),
-    yesterdayDate: currentTime.plus({ days: -1 }).startOf('day'),
-    startTime: currentTime.set({ hour: timeArray.hour, minute: timeArray.min }),
-    dayOfWeek: currentTime.weekdayLong,
-    startOfDay: {
-      time: config.startOfDay,
-      timeArray
-    }
-  }
-
-  console.log({
-    currentTime: def.currentTime.toISO(),
-    currentDate: def.currentDate.toISO(),
-    yesterdayDate: def.yesterdayDate.toISO(),
-    startTime: def.startTime.toISO(),
-    dayOfWeek: currentTime.weekdayLong,
-    startOfDay: {
-      time: config.startOfDay,
-      timeArray
-    }
-  })
-
-  checkWeekend(def)
-  await checkHoliday(def)
-
-  return { data: true }
 }
 
 if (require.main === module) {

@@ -20,7 +20,16 @@ const main = module.exports = async (dateParam) => {
   const classificationCache = new ClassificationCache({ config })
 
   const { timezone } = config
-  const currentDate = DateTime.now().setZone(timezone)
+
+  let currentDate
+  if (process.env.CLASSIFICATION_CURRENT_ISODATE) {
+    currentDate = DateTime
+      .fromISO(process.env.CLASSIFICATION_CURRENT_ISODATE)
+      .setZone(timezone)
+  } else {
+    currentDate = DateTime.now().setZone(timezone)
+  }
+
   const runtimeDate = DateTime.fromISO(new Date(classificationCache.data.runtimeDate).toISOString())
   console.log(`runtime date is set to ${runtimeDate}`)
 
