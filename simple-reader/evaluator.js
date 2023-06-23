@@ -42,7 +42,7 @@ const filters = [
 const { assert } = require('chai')
 
 // NodeJs boilerplate
-const main = async (args) => {
+const main = module.exports = async (args) => {
 
   const filters = require(process.env.FILTERS_FILE_PATH)
   
