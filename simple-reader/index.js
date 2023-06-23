@@ -9,7 +9,7 @@ const main = module.exports = async (params) => {
 
   const messages = await mailBot.searchMessages({})
 
-	let result
+  let result
   if (messages.length > 0) {
     const message = messages[0]
     await message.getContent()
