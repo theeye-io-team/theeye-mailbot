@@ -1,5 +1,4 @@
 
-const { assert } = require('chai')
 
 /**
 
@@ -10,6 +9,10 @@ const { assert } = require('chai')
  https://www.chaijs.com/api/assert/
 
 **/
+/**
+
+ sample rules
+
 const filters = [
   {
     assertions: [
@@ -34,8 +37,15 @@ const filters = [
   }
 ]
 
+*/
+
+const { assert } = require('chai')
+const fs = require('fs')
+
 // NodeJs boilerplate
 const main = async (args) => {
+
+  const filters = fs.readFileSync(process.env.FILTERS_FILE_PATH)
   
   const params = JSON.parse(args[0])
   
@@ -56,7 +66,7 @@ const main = async (args) => {
 
   const result = {
     data: params, 
-    event_name: found?.event_name || 'resumir'
+    event_name: found?.event_name || process.env.DEFAULT_EVENT_NAME
   }
 
   // add your code here.
