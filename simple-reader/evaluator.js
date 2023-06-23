@@ -40,12 +40,11 @@ const filters = [
 */
 
 const { assert } = require('chai')
-const fs = require('fs')
 
 // NodeJs boilerplate
 const main = async (args) => {
 
-  const filters = fs.readFileSync(process.env.FILTERS_FILE_PATH)
+  const filters = require(process.env.FILTERS_FILE_PATH)
   
   const params = JSON.parse(args[0])
   
