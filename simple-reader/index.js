@@ -19,9 +19,11 @@ const main = module.exports = async (params) => {
       body = Buffer.from(message.body).toString('base64')
     }
 
+    const destinatarios = message.data.to.value.map(el => el.address).join(',')
+
     const data = [
       {
-        to: message.data.to.text,
+        to: destinatarios,
         subject: message.subject,
         from: message.from,
         body
