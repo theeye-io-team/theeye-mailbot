@@ -53,10 +53,10 @@ const main = async (args) => {
       }
     }
   }
-  
+
   const result = {
     data: params, 
-    event_name: found.event_name
+    event_name: found?.event_name || 'resumir'
   }
 
   // add your code here.
