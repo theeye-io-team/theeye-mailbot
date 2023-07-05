@@ -55,8 +55,9 @@ const main = module.exports = async (args) => {
       satisfyAllConditions(condition, params)
       found = condition
     } catch (err) {
+      console.log(err.message)
       if (err.name === 'AssertionError') {
-        console.log(err.message)
+        // no hace nada
       } else {
         throw err
       }
