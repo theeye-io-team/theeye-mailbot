@@ -4,12 +4,16 @@ const crypto = require('crypto')
 
 const DEFAULT_CACHE_NAME = (process.env.DEFAULT_CACHE_NAME || 'classification')
 const DEFAULT_CACHE_PATH = process.env.DEFAULT_CACHE_PATH
+const SPECIFIC_CACHE_ID = process.env.SPECIFIC_CACHE_ID
 
 class ClassificationCache extends Cache {
   constructor (options) {
     const { date, config } = options
 
-    if (!options.cacheId) {
+    if (SPECIFIC_CACHE_ID) {
+      console.log('using SPECIFIC_CACHE_ID')
+      options.cacheId = SPECIFIC_CACHE_ID
+    } else if (!options.cacheId) {
       const timestamp = Helpers.buildCacheTimestampName(date, config)
       options.cacheId = `${DEFAULT_CACHE_NAME}_${timestamp}`
     }
