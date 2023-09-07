@@ -21,7 +21,6 @@
     "dotenv": "^10.0.0",
     "form-data": "~3.0.0",
     "got": "^11.8.1",
-    "imap-simple": "~5.0.0",
     "imapflow": "~1.0.107",
     "luxon": "~1.28.1",
     "mailparser": "~3.4.0",
