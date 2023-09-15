@@ -120,24 +120,18 @@ const main = module.exports = async (filters, classificationCache) => {
 
               // ignore old messages
               if (mailDate > runtimeDate) {
-                if (mailDate < lowFilterDate && config.earlyArrivedException === true) {
-                  // a partir del horario de inicio del proceso
-                  // horario usual de llegada del correo
-                  console.log('message arrived early. won\'t be processed')
-                } else {
-                  // no importa si llega antes de tiempo.
-                  found = true
+                // no importa si llega antes de tiempo.
+                found = true
 
-                  const { state, severity } = Helpers.indicatorState(mailDate, lowFilterDate, highFilterDate, criticalFilterDate)
+                const { state, severity } = Helpers.indicatorState(mailDate, lowFilterDate, highFilterDate, criticalFilterDate)
 
-                  filterCacheData.data.solved = mailDate.toFormat('HH:mm')
-                  filterCacheData.data.result.state = state
-                  filterCacheData.data.result.severity = severity
-                  //filterCacheData.processed = true
+                filterCacheData.data.solved = mailDate.toFormat('HH:mm')
+                filterCacheData.data.result.state = state
+                filterCacheData.data.result.severity = severity
+                //filterCacheData.processed = true
 
-                  await message.move()
-                  classificationCache.replaceHashData(filterHash, filterCacheData)
-                }
+                await message.move()
+                classificationCache.replaceHashData(filterHash, filterCacheData)
               } else {
                 console.log('Old message')
               }
