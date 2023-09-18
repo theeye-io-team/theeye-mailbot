@@ -118,6 +118,8 @@ const processAttachments = async (attachments, emailPayload) => {
       const attachmentExt = path.extname(attachment.filename)
       const attachmentRenamed = `${config.folders.INBOX}_${dateFormatted}_${emailPayload.mail_hash}_${attachmentHash}${attachmentExt}`
 
+      console.log(`new attachment name is ${attachmentRenamed}`)
+
       attachmentPayload.attachment_filename = attachment.filename
       attachmentPayload.attachment_hash = attachmentHash
       attachmentPayload.attachment_renamed = attachmentRenamed
