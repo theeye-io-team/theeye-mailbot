@@ -23,8 +23,10 @@ const main = module.exports = async (maxMessages) => {
   for (const rule of attachmentDownloadRules) {
     let messages = await mailBot.searchMessages(rule.search)
 
-    if (maxMessages) {
+    if (!isNaN(Number(maxMessages))) {
       messages = messages.slice(0, Number(maxMessages))
+    } else {
+      console.log('max messages threshold is not set or invalid')
     }
 
     await processMessagesAttachments(rule.downloads, messages)
