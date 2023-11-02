@@ -45,7 +45,7 @@ const main = module.exports = async (dateParam) => {
       config.startOfDay
     )
 
-    // console.log(startDate)
+    console.log(`rule starting date is ${startDate}`)
 
     if (startDate > currentDate) {
       console.log(`waiting until ${startDate}`)
