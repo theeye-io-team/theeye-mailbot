@@ -28,6 +28,6 @@
     "node-tnef": "~1.4.0",
     "qs": "~6.9.6",
     "rfc2047": "^3.0.1",
-    "theeye-bot-sdk": "~1.0.3"
+    "theeye-bot-sdk": "~1.0.4"
   }
 }
