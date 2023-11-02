@@ -4,13 +4,13 @@ const crypto = require('crypto')
 const CACHE_NAME = 'sender'
 const DEFAULT_CACHE_NAME = 'classification'
 const { DateTime } = require('luxon')
-// const sendmail = require('theeye-bot-sdk/core/mail/sender')
+const sendmail = require('theeye-bot-sdk/core/mail/sender')
 
 const ClassificationCache = require('../cache')
 const Cache = require('../../lib/cache')
 const Helpers = require('../../lib/helpers')
 const config = require('../../lib/config').decrypt()
-const nodemailer = require('nodemailer')
+//const nodemailer = require('nodemailer')
 const filters = require('../../filters')
 
 const main = module.exports = async (dateParam) => {
@@ -30,7 +30,9 @@ const main = module.exports = async (dateParam) => {
     currentDate = DateTime.now().setZone(timezone)
   }
 
-  const runtimeDate = DateTime.fromISO(new Date(classificationCache.data.runtimeDate).toISOString())
+  const runtimeDate = DateTime
+    .fromISO(new Date(classificationCache.data.runtimeDate).toISOString())
+    .setZone(timezone)
   console.log(`runtime date is set to ${runtimeDate}`)
 
   for (const filter of filters) {
@@ -62,14 +64,13 @@ const main = module.exports = async (dateParam) => {
 
     console.log(`sending ${startDate}`)
 
-    const transport = nodemailer.createTransport(config.sender.transport)
+    //const transport = nodemailer.createTransport(config.sender.transport)
     console.log('sending email')
-    await transport.sendMail({
-      from: config.from,
-      subject: filter.subject,
-      to: 'patricia-theeye@outlook.com',
-      html: filter.body
-    })
+    await sendmail([
+      filter.subject,
+      'patricia-theeye@outlook.com',
+      filter.body
+    ])
 
     cacheData[hash] = true
   }

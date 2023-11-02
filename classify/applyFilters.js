@@ -10,7 +10,10 @@ const main = module.exports = async (filters, classificationCache) => {
   const { timezone } = config
 
   const cacheData = classificationCache.data
-  const runtimeDate = DateTime.fromISO(new Date(cacheData.runtimeDate).toISOString())
+  const runtimeDate = DateTime
+    .fromISO(new Date(cacheData.runtimeDate).toISOString())
+    .setZone(timezone)
+
   console.log(`runtime date is set to ${runtimeDate}`)
   const mailBot = new MailBot(config)
   await mailBot.connect()
