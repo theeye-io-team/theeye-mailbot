@@ -20,6 +20,15 @@ const main = module.exports = async (maxMessages) => {
   await mailBot.connect()
   console.log('connected')
 
+  if (config.attachments.saveToDiskDir) {
+    try {
+      fs.accessSync(config.attachments.saveToDiskDir, fs.constants.R_OK | fs.constants.W_OK);
+    } catch (err) {
+      console.error(err)
+      throw new Error(`cannot access download directory ${config.attachments.saveToDiskDir}`)
+    }
+  }
+
   for (const rule of attachmentDownloadRules) {
     let messages = await mailBot.searchMessages(rule.search)
 
