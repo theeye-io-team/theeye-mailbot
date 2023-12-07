@@ -426,6 +426,10 @@ const applyResultStyles = (filterData) => {
   let resultStyle = resultStandby
   let resultData = 'Waiting'
 
+  if (filterData.solved === 'N/A') {
+    return { resultStyle: resultNormal, resultData: 'N/A' }
+  }
+
   if (filterData.result.severity === 'critical' && filterData.result.state === 'failure') {
     resultStyle = resultCritical
     if (filterData.solved) {

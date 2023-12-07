@@ -34,136 +34,146 @@ const main = module.exports = async (filters, classificationCache) => {
 
     // si no tiene id no se completo el setup
     const filterHash = filter.id
-    if (!filterHash) {
-      console.log('Filter setup was not completed. This filter will be ignored.')
-    } else {
-      let filterCacheData = cacheData[filterHash]
+    if (filterHash) {
+      const filterCacheData = getRuleCacheData(filter, classificationCache)
 
-      // inicializacion de datos en cache cuando comienza el día o nueva regla
-      if (!filterCacheData) {
-        filterCacheData = classificationCache.initHashData(filterHash, filter)
-      }
+      if (classificationCache.isAlreadyProcessed(filterHash) !== true) {
 
-      if (classificationCache.isAlreadyProcessed(filterHash) === true) {
-        console.log('Skip this rule. Already checked.')
-        continue
-      }
+        const weekday = filter.weekday
+        if (isValidWeekday(weekday)) {
+          if (weekday === 'ALL' || weekday.indexOf(runtimeDate.weekday) !== -1) {
+            // Hoy es
+            const thresholds = filter.thresholdTimes
 
-      const thresholds = filter.thresholdTimes
+            //
+            // @TODO validar. el rango de las reglas de filtrado no pueden contener la hora de inicio del día. rompe la logica
+            //
+            const startFilterDate = Helpers.getFormattedThresholdDate(thresholds.start, timezone, runtimeDate, config.startOfDay)
+            const lowFilterDate = Helpers.getFormattedThresholdDate(thresholds.low, timezone, runtimeDate, config.startOfDay)
+            const highFilterDate = Helpers.getFormattedThresholdDate(thresholds.high, timezone, runtimeDate, config.startOfDay)
+            const criticalFilterDate = Helpers.getFormattedThresholdDate(thresholds.critical, timezone, runtimeDate, config.startOfDay)
 
-      //
-      // @TODO validar. el rango de las reglas de filtrado no pueden contener la hora de inicio del día. rompe la logica
-      //
-      const startFilterDate = Helpers.getFormattedThresholdDate(thresholds.start, timezone, runtimeDate, config.startOfDay)
-      const lowFilterDate = Helpers.getFormattedThresholdDate(thresholds.low, timezone, runtimeDate, config.startOfDay)
-      const highFilterDate = Helpers.getFormattedThresholdDate(thresholds.high, timezone, runtimeDate, config.startOfDay)
-      const criticalFilterDate = Helpers.getFormattedThresholdDate(thresholds.critical, timezone, runtimeDate, config.startOfDay)
+            //
+            // ignore rules not inprogress. skip early checks
+            //
+            if (startFilterDate <= currentDateTime) {
 
-      //
-      // ignore rules not inprogress. skip early checks
-      //
-      if (startFilterDate > currentDateTime) {
-        console.log('Skip this rule. Not started yet')
-        continue
-      }
-
-      let searchCriteria
-      if (filter.search) {
-        searchCriteria = filter.search
-      } else {
-        searchCriteria = {
-          from: filter.from,
-          subject: filter.subject,
-          seen: filter.seen,
-          body: filter.body
-        }
-      }
-
-      const searchSinceModifier = (config.searchSince || 12)
-      const since = new Date(
-        DateTime.fromISO(
-          Helpers.timeExpressionToDate(
-            thresholds.start,
-            timezone,
-            runtimeDate
-          ).toISOString()
-        ).plus({ hours: -searchSinceModifier })
-      ).toISOString()
-
-      searchCriteria.since = since
-
-      const messages = await mailBot.searchMessages(searchCriteria)
-
-      let found = false
-
-      if (messages.length > 0) {
-        //
-        // que pasa si hay mas de 1 con el mismo criterio ??
-        //
-        for (const message of messages) {
-          try {
-            await message.getContent()
-
-            let bodyMatched
-            let bodyText
-            if (process.env.USE_IMAP_BODY_FILTER === "false") {
-              if (filter.body) {
-                bodyText = message.body.split(/[\n\s]/).join(' ')
-                // filter by hand
-                const pattern = new EscapedRegExp(filter.body.trim())
-                bodyMatched = pattern.test(bodyText)
+              let searchCriteria
+              if (filter.search) {
+                searchCriteria = filter.search
+              } else {
+                searchCriteria = {
+                  from: filter.from,
+                  subject: filter.subject,
+                  seen: filter.seen,
+                  body: filter.body
+                }
               }
-            }
 
-            if (bodyMatched === false) {
-              console.log(`body not matched\n>> message body:\n${bodyText}\n>> search body:\n${filter.body}`)
-            } else {
-              const mailDate = getMessageDate({ message, filter, timezone })
-              console.log(`mail date is ${mailDate}`)
+              const searchSinceModifier = (config.searchSince || 12)
+              const since = new Date(
+                DateTime.fromISO(
+                  Helpers.timeExpressionToDate(
+                    thresholds.start,
+                    timezone,
+                    runtimeDate
+                  ).toISOString()
+                ).plus({ hours: -searchSinceModifier })
+              ).toISOString()
 
-              // ignore old messages
-              if (mailDate > runtimeDate) {
-                // no importa si llega antes de tiempo.
-                found = true
+              searchCriteria.since = since
 
-                const { state, severity } = Helpers.indicatorState(mailDate, lowFilterDate, highFilterDate, criticalFilterDate)
+              const messages = await mailBot.searchMessages(searchCriteria)
 
-                filterCacheData.data.solved = mailDate.toFormat('HH:mm')
+              let found = false
+
+              if (messages.length > 0) {
+                //
+                // que pasa si hay mas de 1 con el mismo criterio ??
+                //
+                for (const message of messages) {
+                  try {
+                    await message.getContent()
+
+                    let bodyMatched
+                    let bodyText
+                    if (process.env.USE_IMAP_BODY_FILTER === "false") {
+                      if (filter.body) {
+                        bodyText = message.body.split(/[\n\s]/).join(' ')
+                        // filter by hand
+                        const pattern = new EscapedRegExp(filter.body.trim())
+                        bodyMatched = pattern.test(bodyText)
+                      }
+                    }
+
+                    if (bodyMatched === false) {
+                      console.log(`body not matched\n>> message body:\n${bodyText}\n>> search body:\n${filter.body}`)
+                    } else {
+                      const mailDate = getMessageDate({ message, filter, timezone })
+                      console.log(`mail date is ${mailDate}`)
+
+                      // ignore old messages
+                      if (mailDate > runtimeDate) {
+                        // no importa si llega antes de tiempo.
+                        found = true
+
+                        const { state, severity } = Helpers.indicatorState(mailDate, lowFilterDate, highFilterDate, criticalFilterDate)
+
+                        filterCacheData.data.solved = mailDate.toFormat('HH:mm')
+                        filterCacheData.data.result.state = state
+                        filterCacheData.data.result.severity = severity
+                        //filterCacheData.processed = true
+
+                        await message.move()
+                        classificationCache.replaceHashData(filterHash, filterCacheData)
+                      } else {
+                        console.log('Old message')
+                      }
+                    }
+                  } catch (err) {
+                    console.error(err)
+                  }
+                }
+              }
+
+              if (!found) {
+                const { state, severity } = Helpers.indicatorState(
+                  currentDateTime,
+                  lowFilterDate,
+                  highFilterDate,
+                  criticalFilterDate
+                )
+
+                let sentAlert = filterCacheData.alert[severity]
+                if (!sentAlert) {
+                  sentAlert = await sendAlert(filterCacheData, state, severity)
+                  filterCacheData.alert[severity] = sentAlert
+                }
+
                 filterCacheData.data.result.state = state
                 filterCacheData.data.result.severity = severity
-                //filterCacheData.processed = true
 
-                await message.move()
                 classificationCache.replaceHashData(filterHash, filterCacheData)
-              } else {
-                console.log('Old message')
               }
+            } else {
+              console.log('Rule not started yet')
             }
-          } catch (err) {
-            console.error(err)
+          } else {
+            console.log('Not the weekday.')
+            // hoy no se evalua esta regla
+            filterCacheData.data.solved = 'N/A'
+            filterCacheData.data.result.state = null
+            filterCacheData.data.result.severity = null
           }
+
+        } else {
+          console.log('Rule weekday not set.')
         }
+      } else {
+        console.log('Rule already checked.')
       }
-
-      if (!found) {
-        const { state, severity } = Helpers.indicatorState(
-          currentDateTime,
-          lowFilterDate,
-          highFilterDate,
-          criticalFilterDate
-        )
-
-        let sentAlert = filterCacheData.alert[severity]
-        if (!sentAlert) {
-          sentAlert = await sendAlert(filterCacheData, state, severity)
-          filterCacheData.alert[severity] = sentAlert
-        }
-
-        filterCacheData.data.result.state = state
-        filterCacheData.data.result.severity = severity
-
-        classificationCache.replaceHashData(filterHash, filterCacheData)
-      }
+    } else {
+      console.log('Filter setup was NOT completed. This filter will be ignored.')
     }
   }
 
@@ -283,4 +293,21 @@ const sendAlert = async (filter, state, severity) => {
   if (state === 'failure' && filter.alert) { return true }
 
   return false
+}
+
+const getRuleCacheData = (rule, cache) => {
+  const ruleData = cache.data[rule.id]
+  if (!ruleData) {
+    // inicializacion de datos en cache cuando comienza el día o nueva regla
+    return cache.initHashData(rule.id, rule)
+  }
+
+  ruleData.data.weekday = rule.weekday
+  ruleData.data.thresholds = rule.thresholdTimes
+
+  return ruleData
+}
+
+const isValidWeekday = (weekday) => {
+  return (weekday === 'ALL' || (Array.isArray(weekday) && weekday.every(el => typeof el === 'number')))
 }
