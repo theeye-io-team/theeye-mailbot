@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.7.1](https://github.com/theeye-io/theeye-mailbot/compare/0.7.0...0.7.1) (2023-12-11)
+
+
+### Features
+
+* standard-version ([69cdb59](https://github.com/theeye-io/theeye-mailbot/commit/69cdb59ed08abba54ac1152aca92ea82ad45abda))
+
+
+### Bug Fixes
+
+* capture saveToDisk access error ([5a2a357](https://github.com/theeye-io/theeye-mailbot/commit/5a2a357fc73846f67796cc19919274cdf2e48d21))
+* send and timezone ([982cdd1](https://github.com/theeye-io/theeye-mailbot/commit/982cdd1e27dbbc6b2a0b7d6fe49cbe8c8239ba6f))
+
 ## [0.7.0](https://github.com/theeye-io/theeye-mailbot/compare/0.6.0...0.7.0) (2023-11-02)
 
 
