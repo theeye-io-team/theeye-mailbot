@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "release": "npx standard-version -t ''"
   },
   "repository": {
     "type": "git",
@@ -28,6 +29,7 @@
     "node-tnef": "~1.4.0",
     "qs": "~6.9.6",
     "rfc2047": "^3.0.1",
+    "standard-version": "~9.5.0",
     "theeye-bot-sdk": "~1.0.4"
   }
 }
