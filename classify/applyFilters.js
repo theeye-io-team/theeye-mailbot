@@ -41,7 +41,8 @@ const main = module.exports = async (filters, classificationCache) => {
 
         const weekday = filter.weekday
         if (isValidWeekday(weekday)) {
-          if (weekday === 'ALL' || weekday.indexOf(runtimeDate.weekday) !== -1) {
+          // si weekday === undefined , upgrade de version.
+          if (weekday === undefined || weekday === 'ALL' || weekday.indexOf(runtimeDate.weekday) !== -1) {
             // Hoy es
             const thresholds = filter.thresholdTimes
 
@@ -309,5 +310,6 @@ const getRuleCacheData = (rule, cache) => {
 }
 
 const isValidWeekday = (weekday) => {
+  if (weekday === undefined) { return true }
   return (weekday === 'ALL' || (Array.isArray(weekday) && weekday.every(el => typeof el === 'number')))
 }
