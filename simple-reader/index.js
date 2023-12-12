@@ -2,7 +2,7 @@
 const MailBot = require('../lib/mailbot')
 const config = require('../lib/config').decrypt()
 
-const main = module.exports = async (params) => {
+const main = module.exports = async () => {
 
   const mailBot = new MailBot(config)
   await mailBot.connect()
@@ -24,19 +24,16 @@ const main = module.exports = async (params) => {
       destinatarios = message.data.to.value.map(el => el.address).join(',')
     }
 
-    const data = [
-      {
-        to: destinatarios,
-        subject: message.subject,
-        from: message.from,
-        body
-      }
-    ]
     await message.move()
 
-    result = { event_name: 'message', data }
+    result = {
+      to: destinatarios,
+      subject: message.subject,
+      from: message.from,
+      body
+    }
   } else {
-    result = { event_name: 'end', data: [ 'no more messages' ] }
+    result = null
   }
 
   await mailBot.closeConnection()
