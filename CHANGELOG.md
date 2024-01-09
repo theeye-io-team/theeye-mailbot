@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.7.2](https://github.com/theeye-io/theeye-mailbot/compare/0.7.1...0.7.2) (2024-01-09)
+
+
+### Bug Fixes
+
+* **classify:** contemplar weekday vacio ([95e87c3](https://github.com/theeye-io/theeye-mailbot/commit/95e87c3a1938a3abef0c5f47c5bc741de08b1739))
+
 ### [0.7.1](https://github.com/theeye-io/theeye-mailbot/compare/0.7.0...0.7.1) (2023-12-11)
 
 
