@@ -42,11 +42,17 @@ const filters = [
 const { assert } = require('chai')
 
 // NodeJs boilerplate
-const main = module.exports = async (args) => {
+/**
+ *
+ * @param params
+ * @prop params.body
+ * @prop params.to
+ * @prop params.subject
+ * @prop params.from
+ */
+const main = module.exports = async (params) => {
 
   const filters = require(process.env.FILTERS_FILE_PATH)
-  
-  const params = JSON.parse(args[0])
   
   let found = false
   for (let index = 0; index < filters.length && !found; index++) {
@@ -66,10 +72,8 @@ const main = module.exports = async (args) => {
 
   const result = {
     data: params, 
-    event_name: found?.event_name || process.env.DEFAULT_EVENT_NAME
+    event_name: (found?.event_name || process.env.DEFAULT_EVENT_NAME)
   }
-
-  // add your code here.
 
   return result
 }
@@ -85,5 +89,7 @@ const satisfyAllConditions = (condition, params) => {
 }
 
 if (require.main === module) {
-  main(process.argv.slice(2)).then(console.log).catch(console.error)
+  const args = process.argv.slice(2)
+  const params = JSON.parse(args[0])
+  main(params).then(console.log).catch(console.error)
 }
