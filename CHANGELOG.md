@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.7.3](https://github.com/theeye-io/theeye-mailbot/compare/0.7.2...0.7.3) (2024-03-08)
+
 ### [0.7.2](https://github.com/theeye-io/theeye-mailbot/compare/0.7.1...0.7.2) (2024-01-09)
 
 
