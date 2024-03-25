@@ -100,7 +100,7 @@ const processMessagesAttachments = async (downloads, messages) => {
         await message.move(config.folders.notProcessed || config.folders.processed)
       }
     } catch (err) {
-      console.error(err.message)
+      console.error(err)
       try {
         if (mailHash) {
           emailPayload.lifecycle = 'message_error'

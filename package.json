@@ -24,7 +24,7 @@
     "got": "^11.8.1",
     "imapflow": "~1.0.107",
     "luxon": "~1.28.1",
-    "mailparser": "~3.4.0",
+    "mailparser": "^3.6.9",
     "mime-type": "~4.0.0",
     "node-tnef": "~1.4.0",
     "qs": "~6.9.6",
