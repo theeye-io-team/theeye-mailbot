@@ -1,13 +1,13 @@
 require('dotenv').config()
 
-const config = require('../lib/config').decrypt()
+const config = require('theeye-bot-sdk/core/config').decrypt()
 const fs = require('fs')
 const path = require('path')
-const MailApi = require('../lib/api')
-const mailApi = new MailApi(config)
-const MailBot = require('../lib/mailbot')
+const MailApi = require('theeye-bot-sdk/core/api/mail')
+const mailApi = new MailApi(config.api)
+const MailBot = require('theeye-bot-sdk/core/mail/client')
 const mailBot = new MailBot(config)
-const Helpers = require('../lib/helpers')
+const { createHash } = require('../lib/helpers')
 const { DateTime } = require('luxon')
 
 if (!process.env.DOWNLOAD_RULES_PATH) {
@@ -47,10 +47,11 @@ const main = module.exports = async (maxMessages) => {
   await mailBot.closeConnection()
 }
 
-const processMessagesAttachments = async (downloads, messages) => {
-  if (!Array.isArray(downloads)) {
-    throw new Error('invalid downloads definition')
+const processMessagesAttachments = async (downloadRules, messages) => {
+  if (!Array.isArray(downloadRules)) {
+    throw new Error('invalid downloadRules definition')
   }
+
   for (let index = messages.length - 1; index >= 0; index--) {
     const message = messages[index]
     console.log('-----------------------------------------------------')
@@ -67,7 +68,7 @@ const processMessagesAttachments = async (downloads, messages) => {
       const mailSubject = message.subject
       const mailDate = message.date
 
-      mailHash = Helpers.createHash(`${mailFrom}${mailSubject}${mailDate}`)
+      mailHash = createHash(`${mailFrom}${mailSubject}${mailDate}`)
 
       emailPayload.folder = config.folders.INBOX,
       emailPayload.from = mailFrom,
@@ -77,15 +78,24 @@ const processMessagesAttachments = async (downloads, messages) => {
 
       let attachments = []
 
-      for (let index = 0; index < downloads.length; index++) {
-        const download = downloads[index]
+      for (let index = 0; index < downloadRules.length; index++) {
+        const rule = downloadRules[index]
 
-        switch (download.type) {
+        switch (rule.type) {
+          case 'headers':
+            emailPayload.headers = await message.searchHeaders(rule)
+            break;
+          case 'raw':
+            emailPayload.raw = await message.rawData
+            break;
+          case 'body':
+            emailPayload.body = await message.searchBody(rule)
+            break;
           case 'attachments':
-            attachments = [...attachments, ...await message.searchAttachments(download)]
+            attachments = [...attachments, ...await message.searchAttachments(rule)]
             break;
           case 'body_parser':
-            attachments = [...attachments, ...await message.searchBodyAttachments(download)]
+            attachments = [...attachments, ...await message.searchBodyAttachments(rule)]
             break;
           default:
             break;
@@ -125,7 +135,7 @@ const processAttachments = async (attachments, emailPayload) => {
     try {
       const dateFormatted = DateTime.fromJSDate(emailPayload.reception_date).toFormat(config.attachments.dateFormat)
       const attachmentData = attachment.content
-      const attachmentHash = Helpers.createHash(attachmentData)
+      const attachmentHash = createHash(attachmentData)
       const attachmentExt = path.extname(attachment.filename)
       const attachmentRenamed = `${config.folders.INBOX}_${dateFormatted}_${emailPayload.mail_hash}_${attachmentHash}${attachmentExt}`
 
