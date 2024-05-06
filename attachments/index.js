@@ -89,12 +89,13 @@ const processMessagesAttachments = async (downloadRules, messages) => {
             emailPayload.raw = await message.rawData
             break;
           case 'body':
-            emailPayload.body = await message.searchBody(rule)
+            emailPayload.body = await message.searchBody(rule.format || 'text')
             break;
           case 'attachments':
             attachments = [...attachments, ...await message.searchAttachments(rule)]
             break;
-          case 'body_parser':
+          case 'body_link':
+          case 'body_parser': // old name
             attachments = [...attachments, ...await message.searchBodyAttachments(rule)]
             break;
           default:

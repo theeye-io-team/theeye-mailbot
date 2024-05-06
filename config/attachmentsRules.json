@@ -1,34 +1,62 @@
 [
   {
     "search": {
-      "from": "facugon@theeye.io",
-      "subject": "factura",
-      "or": [
-      ]
+      "from": "facugon@theeye.io" 
     },
     "downloads": [
       {
-        "type": "attachments",
+        "type":"body_link",
+        "format": "html",
+        "url_patterns": [
+          {
+            "pattern":"(https:[^\"]+)",
+            "flags":"ig",
+            "filters": [
+              {
+                "type": "replace",
+                "pattern": "\n",
+                "flags": "ig",
+                "replacement": ""
+              },
+              {
+                "type": "replace",
+                "pattern": "[<>]",
+                "flags": "ig",
+                "replacement": ""
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "headers",
+        "select": [ "received" ]
+      },
+      {
+        "#type": "raw"
+      },
+      {
+        "type": "body",
+        "format": "text",
+        "#format": "html|text"
+      },
+      {
+        "type":"attachments",
         "dispositions": ["inline", "attachment"],
         "extensions": ["pdf"],
         "mime": ["pdf"]
       },
       {
-        "type": "attachments",
-        "dispositions": ["inline"],
-        "extensions": ["jpeg","png"],
-        "mime": ["jpeg","png"]
+        "type":"attachments",
+        "dispositions": ["attachment"],
+        "extensions": ["xml"],
+        "mime": ["text/xml"]
       },
       {
-        "type": "attachments",
+        "type":"attachments",
         "dispositions": ["inline", "attachment"],
-        "extensions": ["pdf", "tiff", "tif"],
-        "mime": ["pdf", "tiff", "tif"]
-      },
-      {
-        "type": "body_parser",
-        "url_patterns": [],
-        "text_patterns": []
+        "extensions": ["png"],
+        "mime": ["image/png"]
       }
     ]
   }
