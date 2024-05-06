@@ -1,23 +1,34 @@
 [
   {
     "search": {
-      "from": ""
+      "from": "facugon@theeye.io",
+      "subject": "factura",
+      "or": [
+      ]
     },
     "downloads": [
       {
-        "type":"attachments",
+        "type": "attachments",
+        "dispositions": ["inline", "attachment"],
+        "extensions": ["pdf"],
+        "mime": ["pdf"]
+      },
+      {
+        "type": "attachments",
+        "dispositions": ["inline"],
+        "extensions": ["jpeg","png"],
+        "mime": ["jpeg","png"]
+      },
+      {
+        "type": "attachments",
         "dispositions": ["inline", "attachment"],
         "extensions": ["pdf", "tiff", "tif"],
         "mime": ["pdf", "tiff", "tif"]
       },
       {
-        "type":"body_parser",
-        "url_patterns":[
-          {
-            "pattern":"(https:\/\/www\\.google\\.com\/...)",
-            "flags":"i"
-          }
-        ]
+        "type": "body_parser",
+        "url_patterns": [],
+        "text_patterns": []
       }
     ]
   }
