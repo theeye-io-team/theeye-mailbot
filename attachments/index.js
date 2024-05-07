@@ -77,37 +77,48 @@ const processMessagesAttachments = async (downloadRules, messages) => {
       emailPayload.mail_hash = mailHash
 
       let attachments = []
+      const emailMeta = { content_type: 'metadata' }
 
       for (let index = 0; index < downloadRules.length; index++) {
         const rule = downloadRules[index]
 
-        switch (rule.type) {
-          case 'headers':
-            emailPayload.headers = await message.searchHeaders(rule)
-            break;
-          case 'raw':
-            emailPayload.raw = await message.rawData
-            break;
-          case 'body':
-            emailPayload.body = await message.searchBody(rule.format || 'text')
-            break;
-          case 'attachments':
-            attachments = [...attachments, ...await message.searchAttachments(rule)]
-            break;
-          case 'body_link':
-          case 'body_parser': // old name
-            attachments = [...attachments, ...await message.searchBodyAttachments(rule)]
-            break;
-          default:
-            break;
-        } 
+        if (rule.type) {
+          console.log(`searching ${rule.type}`)
+          switch (rule.type) {
+            case 'headers':
+              emailMeta.headers = await message.searchHeaders(rule)
+              break;
+            case 'raw':
+              emailMeta.raw = await message.rawData
+              break;
+            case 'body':
+              emailMeta.body = await message.searchBody(rule)
+              break;
+            case 'attachments':
+              attachments = [...attachments, ...await message.searchAttachments(rule)]
+              break;
+            case 'body_link':
+            case 'body_parser': // old name
+              attachments = [...attachments, ...await message.searchBodyAttachments(rule)]
+              break;
+            default:
+              break;
+          } 
+        }
       }
 
+      // upload e-mail base metadata
+      await mailApi.upload(Object.assign({}, emailPayload, emailMeta))
+
+      console.log(`# ${attachments.length} attachments `)
+      // if the email has attachments
+      // then upload the attachments and move to processed
+      // else move to not-processed
       if (attachments.length > 0) {
         await processAttachments(attachments, emailPayload)
         await message.move(config.folders.processed)
       } else {
-        await mailApi.upload(emailPayload)
+        //await mailApi.upload(emailPayload)
         await message.move(config.folders.notProcessed || config.folders.processed)
       }
     } catch (err) {
@@ -131,7 +142,7 @@ const processMessagesAttachments = async (downloadRules, messages) => {
 const processAttachments = async (attachments, emailPayload) => {
   console.log(`processing ${attachments.length} attachments`)
   for (const attachment of attachments) {
-    const attachmentPayload = Object.assign({}, emailPayload)
+    const attachmentPayload = Object.assign({ content_type: 'attachment' }, emailPayload)
 
     try {
       const dateFormatted = DateTime.fromJSDate(emailPayload.reception_date).toFormat(config.attachments.dateFormat)

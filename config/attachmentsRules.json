@@ -6,7 +6,7 @@
     "downloads": [
       {
         "type":"body_link",
-        "format": "html",
+        "body_format": "html",
         "url_patterns": [
           {
             "pattern":"(https:[^\"]+)",
