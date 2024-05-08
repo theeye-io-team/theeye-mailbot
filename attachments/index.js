@@ -108,7 +108,7 @@ const processMessagesAttachments = async (downloadRules, messages) => {
       }
 
       // upload e-mail base metadata
-      await mailApi.upload(Object.assign({}, emailPayload, emailMeta))
+      await mailApi.setMetadata(Object.assign({}, emailPayload, emailMeta))
 
       console.log(`# ${attachments.length} attachments `)
       // if the email has attachments
@@ -122,13 +122,12 @@ const processMessagesAttachments = async (downloadRules, messages) => {
         await message.move(config.folders.notProcessed || config.folders.processed)
       }
     } catch (err) {
-      console.error(err)
+      console.error(err.message)
       try {
         if (mailHash) {
           emailPayload.lifecycle = 'message_error'
           emailPayload.lifecycle_error = err.message
-
-          await mailApi.upload(emailPayload)
+          await mailApi.setMetadata(emailPayload)
         }
         await message.move(config.folders.notProcessed)
       } catch (err) {
