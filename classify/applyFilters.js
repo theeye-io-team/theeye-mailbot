@@ -1,10 +1,10 @@
 const { DateTime } = require('luxon')
 const Helpers = require('../lib/helpers')
-const MailBot = require('../lib/mailbot')
 const TheEyeAlert = require('../lib/alert')
 const EscapedRegExp = require('../lib/escaped-regexp')
 
-const config = require('../lib/config').decrypt()
+const MailBot = require('theeye-bot-sdk/core/mail/client')
+const config = require('theeye-bot-sdk/core/config').decrypt()
 
 const main = module.exports = async (filters, classificationCache) => {
   const { timezone } = config

@@ -1,0 +1,63 @@
+[
+  {
+    "search": {
+      "from": "facugon@theeye.io" 
+    },
+    "downloads": [
+      {
+        "type":"body_link",
+        "body_format": "html",
+        "url_patterns": [
+          {
+            "pattern":"(https:[^\"]+)",
+            "flags":"ig",
+            "filters": [
+              {
+                "type": "replace",
+                "pattern": "\n",
+                "flags": "ig",
+                "replacement": ""
+              },
+              {
+                "type": "replace",
+                "pattern": "[<>]",
+                "flags": "ig",
+                "replacement": ""
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "headers",
+        "select": [ "received" ]
+      },
+      {
+        "#type": "raw"
+      },
+      {
+        "type": "body",
+        "format": "text",
+        "#format": "html|text"
+      },
+      {
+        "type":"attachments",
+        "dispositions": ["inline", "attachment"],
+        "extensions": ["pdf"],
+        "mime": ["pdf"]
+      },
+      {
+        "type":"attachments",
+        "dispositions": ["attachment"],
+        "extensions": ["xml"],
+        "mime": ["text/xml"]
+      },
+      {
+        "type":"attachments",
+        "dispositions": ["inline", "attachment"],
+        "extensions": ["png"],
+        "mime": ["image/png"]
+      }
+    ]
+  }
+]

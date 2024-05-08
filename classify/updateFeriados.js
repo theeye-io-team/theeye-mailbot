@@ -1,7 +1,6 @@
-const MailBot = require('../lib/mailbot')
-const Files = require('../lib/file')
-
-const config = require('../lib/config').decrypt()
+const MailBot = require('theeye-bot-sdk/core/mail/client')
+const Files = require('theeye-bot-sdk/core/api/file')
+const config = require('theeye-bot-sdk/core/config').decrypt()
 
 Files.access_token = config.api.accessToken
 

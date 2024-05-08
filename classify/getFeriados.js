@@ -1,10 +1,10 @@
 require('dotenv').config()
 
 const puppeteer = require('puppeteer')
-const Files = require('../lib/file')
 const { DateTime } = require('luxon')
 const fs = require('fs')
-const config = require('../lib/config').decrypt()
+const Files = require('theeye-bot-sdk/core/api/file')
+const config = require('theeye-bot-sdk/core/config').decrypt()
 
 Files.access_token = config.api.accessToken
 
