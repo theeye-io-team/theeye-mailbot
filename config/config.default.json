@@ -1,0 +1,88 @@
+{
+  "startOfDay": "13:30",
+  "searchSince": 12,
+  "timezone":"America/Argentina/Buenos_Aires",
+  "imap": {
+    "host": "outlook.office365.com",
+    "port": 993,
+    "tls": true,
+    "authTimeout": 3000,
+    "auth": {
+      "user": "",
+      "//password":"required for basic authentication",
+      "//accessToken":"only if a fixed bearer token can be used",
+      "msxoauth": {
+        "tenant_id": "",
+        "client_id": "",
+        "client_secret": "",
+        "//scope": "https://outlook.office.com/.default",
+        "//grant_type": "client_credentials"
+      }
+    }
+  },
+  "folders": {
+    "INBOX": "INBOX",
+    "processed": "Procesados"
+  },
+  "moveProcessedMessages": false,
+  "searchCriteria": {},
+  "deleteMessages": false,
+  "deletionPolicies": {
+    "hours": 48
+  },
+  "sender": {
+    "from": "",
+    "transport": {
+      "host": "smtp.gmail.com",
+      "port": 587,
+      "auth": {
+        "user": "",
+        "pass": ""
+      },
+      "secureConnection": false,
+      "tls": {
+        "ciphers": "SSLv3"
+      },
+      "requireTLS": true
+    }
+  },
+  "indicator_titles": {
+    "progress":"Progress",
+    "progress_detail":"Progress Detail",
+    "progress_detail_only_waiting":"Progress Detail for Unsolved",
+    "status":"Estado",
+    "summary":"Resumen %DATE%"
+  },
+  "indicator_column_titles": {
+    "title":"Description"
+  },
+  "dismissButton": {
+    "label":"Dismiss",
+    "class":"btn btn-primary task-exec-button",
+    "icon":"fa fa-close"
+  },
+  "manuallyResolvedAlarm": {
+    "display":true,
+    "label":"Resolved",
+    "icon":"fa fa-check"
+  },
+  "resolveTaskID": "624ee5f03d74ee00128e2019",
+  "feriados": {
+    "baseUrl": "https://www.argentina.gob.ar/interior/feriados-nacionales-",
+    "filename": "feriados.json",
+    "emailSubject": "Actualizacion de Feriados"
+  },
+  "api": {
+    "url": "https://digitize-api.theeye.io",
+    "accessToken": ""
+  },
+  "attachments": {
+    "allowed": {
+      "dispositions": ["inline", "attachment"],
+      "extensions": ["pdf", "tiff", "tif", "dat"],
+      "mime": ["pdf", "tiff", "tif", "octet-stream"]
+    },
+    "saveToDiskDir": "",
+    "dateFormat":"yyyyMMdd"
+  }
+}

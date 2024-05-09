@@ -12,7 +12,6 @@ const main = module.exports = async () => {
     const mailBot = new MailBot(config)
 
     console.log('connecting ..')
-    console.log(`using ${config.imap.user}`)
     await mailBot.connect()
     console.log('connected!')
 
