@@ -6,8 +6,8 @@
     "downloads": [
       {
         "type":"body_link",
-        "body_format": "html",
-        "url_patterns": [
+        "bodyFormat": "html",
+        "urlPatterns": [
           {
             "pattern":"(https:[^\"]+)",
             "flags":"ig",
