@@ -1,7 +1,7 @@
 const { DateTime } = require('luxon')
 const Helpers = require('../lib/helpers')
 const TheEyeAlert = require('../lib/alert')
-const EscapedRegExp = require('../lib/escaped-regexp')
+//const EscapedRegExp = require('../lib/escaped-regexp')
 
 const MailBot = require('theeye-bot-sdk/core/mail/client')
 const config = require('theeye-bot-sdk/core/config').decrypt()
@@ -100,9 +100,9 @@ const main = module.exports = async (filters, classificationCache) => {
                     let bodyText
                     if (process.env.USE_IMAP_BODY_FILTER === "false") {
                       if (filter.body) {
-                        bodyText = message.body.split(/[\n\s]/).join(' ')
+                        bodyText = message.body.split(/[\n\s]/).join(' ').trim()
                         // filter by hand
-                        const pattern = new EscapedRegExp(filter.body.trim())
+                        const pattern = new RegExp(filter.body.trim())
                         bodyMatched = pattern.test(bodyText)
                       }
                     }
