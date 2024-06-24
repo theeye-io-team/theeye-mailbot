@@ -37,7 +37,8 @@
       },
       {
         "type": "body",
-        "format": "text",
+        "format": "html",
+        "extractText": true,
         "#format": "html|text"
       },
       {
