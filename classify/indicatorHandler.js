@@ -303,6 +303,7 @@ module.exports = {
     } else {
       indicator.order = progressDetail ? 1 : 100
       indicator.value = value
+      indicator.type = 'html'
       indicator.state = ''
       indicator.severity = 'low'
       indicator.tags = progressDetail ? [] : ['summary']
@@ -413,6 +414,7 @@ module.exports = {
     indicator.order = 2
     indicator.accessToken = config.api.accessToken
     indicator.value = value
+    indicator.type = 'html'
     indicator.state = ''
     indicator.severity = 'low'
     indicator.acl = acl

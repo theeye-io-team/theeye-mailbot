@@ -104,7 +104,7 @@ const main = module.exports = async (date = null) => {
   indicator.value = html
   indicator.order = 1
   indicator.state = 'normal'
-  indicator.type = 'text'
+  indicator.type = 'html'
   //indicator.tags = [ DateTime.fromISO(classificationCache.data.runtimeDate).toFormat('dd-MM-yyyy') ]
   if (acls !== null) {
     indicator.acl = [].concat(
