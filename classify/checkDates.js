@@ -1,8 +1,8 @@
 require('dotenv').config()
 
 const { DateTime } = require('luxon')
-const config = require('../lib/config').decrypt()
-const Files = require('../lib/file')
+const config = require('theeye-bot-sdk/core/config').decrypt()
+const Files = require('theeye-bot-sdk/core/api/file')
 
 Files.access_token = config.api.accessToken
 
@@ -88,10 +88,11 @@ const checkWeekend = (def) => {
 const checkHoliday = async (def) => {
   console.log('checkHoliday')
 
-  const file = await Files.GetByFilename(config.feriados.filename || 'feriados.json')
+  const file = await Files.GetByFilename(config.feriados?.filename || 'feriados.json')
+  if (!Array.isArray(file) || file.length === 0) {
+    return
+  }
   const holidays = await Files.Download(file[0].id)
-
-  console.log(holidays)
 
   for (const holiday of holidays) {
     const holidayDate = DateTime.fromFormat(holiday, 'dd-MM-yyyy', { zone: config.timezone })
