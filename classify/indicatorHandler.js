@@ -2,7 +2,7 @@ require('dotenv').config()
 
 const { DateTime } = require('luxon')
 const Helpers = require('../lib/helpers')
-const TheEyeIndicator = require('../lib/indicator')
+const TheEyeIndicator = require('theeye-bot-sdk/core/api/indicator')
 const config = require('../lib/config').decrypt()
 TheEyeIndicator.accessToken = config.api.accessToken
 
