@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.7.4](https://github.com/theeye-io/theeye-mailbot/compare/0.7.3...0.7.4) (2024-10-09)
+
+
+### Features
+
+* body rules ([#18](https://github.com/theeye-io/theeye-mailbot/issues/18)) ([0a0c38f](https://github.com/theeye-io/theeye-mailbot/commit/0a0c38fd32c003653381ca56dfae53b6470831c8))
+* **botsdk:** mailbot with oauth support ([037fddd](https://github.com/theeye-io/theeye-mailbot/commit/037fddd37963c787278c121eb58227396fad0a11))
+* mailbot version 2.3.0 ([034e041](https://github.com/theeye-io/theeye-mailbot/commit/034e041e795f415f5126e7a4e91d7bfe50f78d18))
+
+
+### Bug Fixes
+
+* body pattern matching ([d13e362](https://github.com/theeye-io/theeye-mailbot/commit/d13e3627e8e53831571a26c484e04e110e712f85))
+* file not found check ([caf8db9](https://github.com/theeye-io/theeye-mailbot/commit/caf8db95c67a9b304bcfb5c271823e836b07946a))
+* indicator types ([d2eb7fa](https://github.com/theeye-io/theeye-mailbot/commit/d2eb7fa345781748cfa87a3024c75672ac7981f1))
+* test sender using latest bot-sdk ([989684b](https://github.com/theeye-io/theeye-mailbot/commit/989684b53f7614e00e8a10fc01bda20ab90dc5f4))
+
 ### [0.7.3](https://github.com/theeye-io/theeye-mailbot/compare/0.7.2...0.7.3) (2024-03-08)
 
 ### [0.7.2](https://github.com/theeye-io/theeye-mailbot/compare/0.7.1...0.7.2) (2024-01-09)
